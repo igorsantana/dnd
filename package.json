@@ -1,0 +1,31 @@
+{
+  "name": "dnd",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "bun scripts/build-spells.mjs && bun scripts/pixelate-dm.mjs && bun scripts/generate-skeleton-sprite.mjs && tsc -b && vite build",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "snes.css": "^1.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@vercel/node": "^5.8.25",
+    "@vitejs/plugin-react": "^6.0.3",
+    "jimp": "^1.6.1",
+    "oxlint": "^1.71.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~6.0.2",
+    "vite": "^8.1.1"
+  }
+}

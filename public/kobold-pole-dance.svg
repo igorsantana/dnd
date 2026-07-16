@@ -1,0 +1,240 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 160" width="256" height="320" shape-rendering="crispEdges">
+  <defs>
+    <linearGradient id="stage" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1a0f1e"/>
+      <stop offset="55%" stop-color="#2d1a35"/>
+      <stop offset="100%" stop-color="#120a14"/>
+    </linearGradient>
+    <radialGradient id="spotlight" cx="50%" cy="28%" r="45%">
+      <stop offset="0%" stop-color="#ff6b9d" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#a64b35" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#000" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pole" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6a6a72"/>
+      <stop offset="35%" stop-color="#e8e8f0"/>
+      <stop offset="55%" stop-color="#ffffff"/>
+      <stop offset="75%" stop-color="#c0c0c8"/>
+      <stop offset="100%" stop-color="#5a5a62"/>
+    </linearGradient>
+    <linearGradient id="pole-shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#fff" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <style>
+      .pixel { shape-rendering: crispEdges; }
+      @keyframes spin {
+        0%   { transform: rotate(0deg); }
+        25%  { transform: rotate(90deg); }
+        50%  { transform: rotate(180deg); }
+        75%  { transform: rotate(270deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes bob {
+        0%, 100% { transform: translateY(0); }
+        50%      { transform: translateY(-3px); }
+      }
+      @keyframes leg-l {
+        0%, 100% { transform: rotate(-18deg); }
+        50%      { transform: rotate(28deg); }
+      }
+      @keyframes leg-r {
+        0%, 100% { transform: rotate(22deg); }
+        50%      { transform: rotate(-24deg); }
+      }
+      @keyframes arm-l {
+        0%, 100% { transform: rotate(-8deg); }
+        50%      { transform: rotate(14deg); }
+      }
+      @keyframes arm-r {
+        0%, 100% { transform: rotate(8deg); }
+        50%      { transform: rotate(-12deg); }
+      }
+      @keyframes tail {
+        0%, 100% { transform: rotate(-30deg); }
+        33%      { transform: rotate(10deg); }
+        66%      { transform: rotate(40deg); }
+      }
+      @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0.5); }
+        50%      { opacity: 1; transform: scale(1); }
+      }
+      @keyframes spotlight-pulse {
+        0%, 100% { opacity: 0.85; }
+        50%      { opacity: 1; }
+      }
+      .dancer-spin {
+        transform-origin: 64px 72px;
+        animation: spin 4s linear infinite;
+      }
+      .dancer-bob {
+        transform-origin: 64px 72px;
+        animation: bob 0.6s ease-in-out infinite;
+      }
+      .leg-l  { transform-origin: 58px 88px; animation: leg-l 0.6s ease-in-out infinite; }
+      .leg-r  { transform-origin: 70px 88px; animation: leg-r 0.6s ease-in-out infinite 0.15s; }
+      .arm-l  { transform-origin: 54px 62px; animation: arm-l 0.5s ease-in-out infinite; }
+      .arm-r  { transform-origin: 74px 62px; animation: arm-r 0.5s ease-in-out infinite 0.1s; }
+      .tail-g { transform-origin: 64px 78px; animation: tail 0.8s ease-in-out infinite; }
+      .spot   { animation: spotlight-pulse 2s ease-in-out infinite; }
+      .spark-a { animation: sparkle 1.2s ease-in-out infinite; }
+      .spark-b { animation: sparkle 1.2s ease-in-out infinite 0.4s; }
+      .spark-c { animation: sparkle 1.2s ease-in-out infinite 0.8s; }
+    </style>
+  </defs>
+
+  <!-- Stage -->
+  <rect width="128" height="160" fill="url(#stage)"/>
+  <ellipse class="spot" cx="64" cy="44" rx="52" ry="40" fill="url(#spotlight)"/>
+
+  <!-- Floor platform -->
+  <rect x="20" y="138" width="88" height="6" fill="#3d2a35"/>
+  <rect x="24" y="144" width="80" height="4" fill="#2a1c24"/>
+  <rect x="28" y="148" width="72" height="3" fill="#1a1018"/>
+
+  <!-- Pole (behind dancer partially) -->
+  <rect x="61" y="18" width="6" height="122" fill="url(#pole)" rx="1"/>
+  <rect x="62" y="18" width="2" height="122" fill="url(#pole-shine)" opacity="0.6"/>
+  <rect x="59" y="16" width="10" height="4" fill="#888" rx="1"/>
+  <rect x="57" y="134" width="14" height="5" fill="#666" rx="1"/>
+
+  <!-- Sparkles -->
+  <g class="spark-a">
+    <rect class="pixel" x="22" y="30" width="2" height="2" fill="#ffd700"/>
+    <rect class="pixel" x="20" y="32" width="2" height="2" fill="#ffd700" opacity="0.6"/>
+    <rect class="pixel" x="24" y="32" width="2" height="2" fill="#ffd700" opacity="0.6"/>
+  </g>
+  <g class="spark-b">
+    <rect class="pixel" x="100" y="48" width="2" height="2" fill="#ff9ecf"/>
+    <rect class="pixel" x="98" y="50" width="2" height="2" fill="#ff9ecf" opacity="0.6"/>
+    <rect class="pixel" x="102" y="50" width="2" height="2" fill="#ff9ecf" opacity="0.6"/>
+  </g>
+  <g class="spark-c">
+    <rect class="pixel" x="38" y="22" width="2" height="2" fill="#fff"/>
+    <rect class="pixel" x="36" y="24" width="2" height="2" fill="#fff" opacity="0.5"/>
+    <rect class="pixel" x="40" y="24" width="2" height="2" fill="#fff" opacity="0.5"/>
+  </g>
+
+  <!-- Dancer -->
+  <g class="dancer-spin">
+    <g class="dancer-bob">
+
+      <!-- Tail (wraps pole dynamically) -->
+      <g class="tail-g">
+        <rect class="pixel" x="60" y="80" width="8" height="4" fill="#A64B35"/>
+        <rect class="pixel" x="58" y="84" width="10" height="4" fill="#7A3525"/>
+        <rect class="pixel" x="54" y="88" width="12" height="4" fill="#A64B35"/>
+        <rect class="pixel" x="50" y="90" width="4" height="4" fill="#4D261B"/>
+        <rect class="pixel" x="48" y="92" width="10" height="4" fill="#A64B35"/>
+        <rect class="pixel" x="44" y="94" width="4" height="4" fill="#4D261B"/>
+        <rect class="pixel" x="40" y="96" width="10" height="4" fill="#7A3525"/>
+        <rect class="pixel" x="36" y="98" width="8" height="4" fill="#A64B35"/>
+        <rect class="pixel" x="32" y="100" width="6" height="4" fill="#C45E42"/>
+        <rect class="pixel" x="30" y="102" width="4" height="4" fill="#A64B35"/>
+      </g>
+
+      <!-- Left leg -->
+      <g class="leg-l">
+        <rect class="pixel" x="54" y="86" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="52" y="92" width="4" height="4" fill="#4D261B"/>
+        <rect class="pixel" x="50" y="96" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="48" y="102" width="8" height="4" fill="#C45E42"/>
+        <rect class="pixel" x="46" y="106" width="3" height="3" fill="#1A1A1A"/>
+        <rect class="pixel" x="50" y="106" width="3" height="3" fill="#1A1A1A"/>
+        <rect class="pixel" x="54" y="106" width="3" height="3" fill="#1A1A1A"/>
+      </g>
+
+      <!-- Right leg -->
+      <g class="leg-r">
+        <rect class="pixel" x="68" y="86" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="70" y="92" width="4" height="4" fill="#4D261B"/>
+        <rect class="pixel" x="68" y="96" width="6" height="6" fill="#7A3525"/>
+        <rect class="pixel" x="70" y="102" width="8" height="4" fill="#C45E42"/>
+        <rect class="pixel" x="70" y="106" width="3" height="3" fill="#1A1A1A"/>
+        <rect class="pixel" x="74" y="106" width="3" height="3" fill="#1A1A1A"/>
+        <rect class="pixel" x="78" y="106" width="3" height="3" fill="#1A1A1A"/>
+      </g>
+
+      <!-- Torso -->
+      <rect class="pixel" x="54" y="68" width="20" height="6" fill="#C45E42"/>
+      <rect class="pixel" x="52" y="74" width="24" height="6" fill="#A64B35"/>
+      <rect class="pixel" x="54" y="80" width="20" height="6" fill="#A64B35"/>
+      <rect class="pixel" x="56" y="68" width="4" height="4" fill="#4D261B"/>
+      <rect class="pixel" x="68" y="74" width="4" height="4" fill="#4D261B"/>
+      <rect class="pixel" x="58" y="80" width="4" height="4" fill="#7A3525"/>
+
+      <!-- Loincloth -->
+      <rect class="pixel" x="54" y="84" width="20" height="4" fill="#9C8A4D"/>
+      <rect class="pixel" x="56" y="88" width="4" height="4" fill="#7A6A38"/>
+      <rect class="pixel" x="68" y="88" width="4" height="4" fill="#7A6A38"/>
+      <rect class="pixel" x="60" y="90" width="8" height="2" fill="#B8A55A"/>
+
+      <!-- Left arm (gripping pole) -->
+      <g class="arm-l">
+        <rect class="pixel" x="48" y="62" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="44" y="66" width="6" height="4" fill="#333333"/>
+        <rect class="pixel" x="42" y="70" width="6" height="4" fill="#333333"/>
+        <rect class="pixel" x="58" y="64" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="56" y="68" width="4" height="4" fill="#1A1A1A"/>
+        <rect class="pixel" x="60" y="68" width="4" height="4" fill="#1A1A1A"/>
+      </g>
+
+      <!-- Right arm (gripping pole) -->
+      <g class="arm-r">
+        <rect class="pixel" x="74" y="62" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="78" y="66" width="6" height="4" fill="#333333"/>
+        <rect class="pixel" x="80" y="70" width="6" height="4" fill="#333333"/>
+        <rect class="pixel" x="64" y="64" width="6" height="6" fill="#A64B35"/>
+        <rect class="pixel" x="64" y="68" width="4" height="4" fill="#1A1A1A"/>
+        <rect class="pixel" x="68" y="68" width="4" height="4" fill="#1A1A1A"/>
+      </g>
+
+      <!-- Neck -->
+      <rect class="pixel" x="58" y="58" width="12" height="6" fill="#A64B35"/>
+      <rect class="pixel" x="60" y="56" width="8" height="4" fill="#C45E42"/>
+
+      <!-- Head / snout -->
+      <rect class="pixel" x="54" y="44" width="20" height="6" fill="#A64B35"/>
+      <rect class="pixel" x="50" y="48" width="28" height="6" fill="#A64B35"/>
+      <rect class="pixel" x="48" y="52" width="32" height="4" fill="#C45E42"/>
+      <!-- Snout extension -->
+      <rect class="pixel" x="44" y="50" width="8" height="4" fill="#7A3525"/>
+      <rect class="pixel" x="42" y="52" width="6" height="4" fill="#A64B35"/>
+      <rect class="pixel" x="40" y="54" width="4" height="2" fill="#4D261B"/>
+      <!-- Jaw spots -->
+      <rect class="pixel" x="52" y="54" width="4" height="2" fill="#4D261B"/>
+      <rect class="pixel" x="72" y="52" width="4" height="2" fill="#4D261B"/>
+
+      <!-- Eyes -->
+      <rect class="pixel" x="54" y="50" width="4" height="3" fill="#E8B830"/>
+      <rect class="pixel" x="70" y="50" width="4" height="3" fill="#E8B830"/>
+      <rect class="pixel" x="55" y="51" width="2" height="2" fill="#1A1A1A"/>
+      <rect class="pixel" x="71" y="51" width="2" height="2" fill="#1A1A1A"/>
+
+      <!-- Horns -->
+      <rect class="pixel" x="52" y="38" width="4" height="6" fill="#2A2220"/>
+      <rect class="pixel" x="72" y="38" width="4" height="6" fill="#2A2220"/>
+      <rect class="pixel" x="50" y="36" width="4" height="4" fill="#1A1A1A"/>
+      <rect class="pixel" x="74" y="36" width="4" height="4" fill="#1A1A1A"/>
+      <!-- Brow spikes -->
+      <rect class="pixel" x="56" y="42" width="2" height="2" fill="#4D261B"/>
+      <rect class="pixel" x="60" y="40" width="2" height="2" fill="#4D261B"/>
+      <rect class="pixel" x="66" y="40" width="2" height="2" fill="#4D261B"/>
+      <rect class="pixel" x="70" y="42" width="2" height="2" fill="#4D261B"/>
+
+      <!-- Hands on pole overlay -->
+      <rect class="pixel" x="58" y="66" width="4" height="4" fill="#A64B35"/>
+      <rect class="pixel" x="66" y="66" width="4" height="4" fill="#A64B35"/>
+
+    </g>
+  </g>
+
+  <!-- Pole in front of hands for depth -->
+  <rect x="61" y="60" width="6" height="14" fill="url(#pole)" opacity="0.85"/>
+  <rect x="62" y="60" width="2" height="14" fill="#fff" opacity="0.3"/>
+
+  <!-- Music notes -->
+  <text x="14" y="56" fill="#ff9ecf" font-size="8" font-family="monospace" opacity="0.7">j</text>
+  <text x="108" y="72" fill="#ffd700" font-size="6" font-family="monospace" opacity="0.6">k</text>
+  <text x="18" y="100" fill="#ff9ecf" font-size="6" font-family="monospace" opacity="0.5">j</text>
+</svg>
