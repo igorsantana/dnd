@@ -4,6 +4,7 @@ import { downloadJson, loadAllCharacters } from '../lib/storage'
 import { fetchCharactersFromCloud, mergeCharacterLists } from '../lib/remote-storage'
 import { clearSession } from '../lib/auth'
 import { pt } from '../i18n/pt'
+import { getProfileById } from '../data/profiles'
 import { PrimaryButton, SectionTitle } from './ui'
 import { CharacterSummary } from './CharacterSummary'
 
@@ -31,7 +32,13 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
   }, [])
 
   function handleExportOne(character: Character) {
-    downloadJson(`${character.name.replace(/\s+/g, '-').toLowerCase()}.json`, character)
+    const profile = character.profileId ? getProfileById(character.profileId) : undefined
+    const exportedCharacter = {
+      ...character,
+      ...(profile && { profileImageUrl: new URL(profile.image, window.location.origin).href }),
+    }
+
+    downloadJson(`${character.name.replace(/\s+/g, '-').toLowerCase()}.json`, exportedCharacter)
   }
 
   function handleLogout() {
