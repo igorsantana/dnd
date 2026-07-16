@@ -17,7 +17,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Yohann',
     characterClass: 'wizard',
     classLabel: 'Mago',
-    image: '/profiles/honda.svg',
+    image: '/profiles/honda.png',
     accentColor: '#4a7cff',
   },
   {
@@ -26,7 +26,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Geraldo',
     characterClass: 'bard',
     classLabel: 'Bardo',
-    image: '/profiles/antunes.svg',
+    image: '/profiles/antunes.png',
     accentColor: '#c44dff',
   },
   {
@@ -35,7 +35,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Wellby',
     characterClass: 'ranger',
     classLabel: 'Patrulheiro',
-    image: '/profiles/keiti.svg',
+    image: '/profiles/keiti.png',
     accentColor: '#3dba6a',
   },
   {
@@ -44,7 +44,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Sebastião',
     characterClass: 'fighter',
     classLabel: 'Guerreiro',
-    image: '/profiles/rafael.svg',
+    image: '/profiles/rafael.png',
     accentColor: '#e85d4c',
   },
   {
@@ -53,7 +53,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Kaneh',
     characterClass: 'fighter',
     classLabel: 'Guerreiro',
-    image: '/profiles/leozin.svg',
+    image: '/profiles/leozin.png',
     accentColor: '#f0a030',
   },
 ]
