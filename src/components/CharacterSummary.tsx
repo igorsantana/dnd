@@ -160,6 +160,25 @@ export function CharacterSummary({ character }: { character: Character }) {
         </div>
       </SummarySection>
 
+      <SummarySection
+        title={tc.spellcasting}
+        empty={
+          !hasText(character.spellAttackBonus) &&
+          !hasText(character.spellSaveDC)
+        }
+      >
+        <div className="admin-summary-grid">
+          <SummaryField
+            label={tc.spellAttackBonus}
+            value={character.spellAttackBonus ?? ''}
+          />
+          <SummaryField
+            label={tc.spellSaveDC}
+            value={character.spellSaveDC ?? ''}
+          />
+        </div>
+      </SummarySection>
+
       <SummarySection title={t.attacks} empty={!hasAttacks}>
         <ul className="admin-summary-list">
           {character.attacks

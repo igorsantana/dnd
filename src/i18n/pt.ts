@@ -64,6 +64,9 @@ export const pt = {
   },
   classes: {
     spells: 'Magias',
+    spellcasting: 'Conjuração',
+    spellAttackBonus: 'Bônus de Ataque Mágico',
+    spellSaveDC: 'CD para Evitar Magia',
     spellSlots: 'Espaços de Magia',
     cantrips: 'Truques',
     preparedSpells: 'Magias Preparadas',

@@ -11,6 +11,10 @@ interface ClassSectionsProps {
   onUpdateSpells: (spells: Character['spells']) => void
   onUpdateSpellSlots: (slots: Character['spellSlots']) => void
   onUpdateClassFeatures: (features: ClassFeatures) => void
+  onUpdateSpellcasting: (
+    field: 'spellAttackBonus' | 'spellSaveDC',
+    value: string,
+  ) => void
 }
 
 export function ClassSections({
@@ -19,6 +23,7 @@ export function ClassSections({
   onUpdateSpells,
   onUpdateSpellSlots,
   onUpdateClassFeatures,
+  onUpdateSpellcasting,
 }: ClassSectionsProps) {
   const t = pt.classes
   const isCaster = isCasterClass(characterClass)
@@ -44,6 +49,25 @@ export function ClassSections({
     <>
       {isCaster && (
         <>
+          <div className="sheet-section">
+            <SectionTitle>{t.spellcasting}</SectionTitle>
+            <div className="field-grid field-grid-2">
+              <Field
+                label={t.spellAttackBonus}
+                value={character.spellAttackBonus}
+                onChange={(value) => onUpdateSpellcasting('spellAttackBonus', value)}
+                placeholder="+7"
+              />
+              <Field
+                label={t.spellSaveDC}
+                value={character.spellSaveDC}
+                onChange={(value) => onUpdateSpellcasting('spellSaveDC', value)}
+                placeholder="15"
+                type="number"
+              />
+            </div>
+          </div>
+
           <div className="sheet-section">
             <SectionTitle>{t.spellSlots}</SectionTitle>
             <div className="spell-slots-row">

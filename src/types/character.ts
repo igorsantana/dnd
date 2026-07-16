@@ -92,6 +92,8 @@ export interface Character {
   speed: string
   initiative: string
   proficiencyBonus: string
+  spellAttackBonus: string
+  spellSaveDC: string
   attacks: Attack[]
   magicItems: MagicItem[]
   currency: Currency
@@ -165,6 +167,8 @@ export function createEmptyCharacter(): Character {
     speed: '30',
     initiative: '',
     proficiencyBonus: '+3',
+    spellAttackBonus: '',
+    spellSaveDC: '',
     attacks: [],
     magicItems: [],
     currency: {
@@ -187,10 +191,25 @@ export function mergeCharacterDefaults(
   characterClass: CharacterClass,
   classLabel: string,
 ): Character {
+  const isGeraldo =
+    character.profileId === 'antunes' ||
+    (character.name?.trim().toLowerCase() === 'geraldo' &&
+      character.playerName?.trim().toLowerCase() === 'antunes')
+  const attacks = isGeraldo
+    ? (character.attacks ?? []).filter(
+        (attack) =>
+          attack.name.trim().replace(/\s+/g, ' ').toUpperCase() !==
+          'SPELL ATTACK +7 SAVE DC 15',
+      )
+    : (character.attacks ?? [])
+
   return {
     ...createEmptyCharacter(),
     ...character,
     class: character.class || classLabel,
+    attacks,
+    spellAttackBonus: character.spellAttackBonus || (isGeraldo ? '+7' : ''),
+    spellSaveDC: character.spellSaveDC || (isGeraldo ? '15' : ''),
     spells: character.spells ?? [],
     spellSlots:
       character.spellSlots && Object.keys(character.spellSlots).length > 0

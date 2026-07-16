@@ -293,6 +293,7 @@ export function PlayerSheet() {
                     onUpdateSpells={(spells) => update('spells', spells)}
                     onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}
                     onUpdateClassFeatures={(classFeatures) => update('classFeatures', classFeatures)}
+                    onUpdateSpellcasting={(field, value) => update(field, value)}
                   />
                 </div>
               )}
@@ -305,6 +306,7 @@ export function PlayerSheet() {
                     onUpdateSpells={(spells) => update('spells', spells)}
                     onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}
                     onUpdateClassFeatures={(classFeatures) => update('classFeatures', classFeatures)}
+                    onUpdateSpellcasting={(field, value) => update(field, value)}
                   />
                 )}
                 <div className="sheet-section">
