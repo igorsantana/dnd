@@ -733,8 +733,10 @@
 
 .login-page-header .snes-container-title {
   margin-bottom: 1.5rem;
+  margin-inline: auto;
   font-size: clamp(17px, 2.7vw, 25px);
   line-height: 1.7;
+  text-align: center;
 }
 
 .login-page-subtitle {
