@@ -517,7 +517,11 @@ async function main() {
   })
 
   mkdirSync(dirname(OUT), { recursive: true })
-  writeFileSync(OUT, JSON.stringify(catalog))
+  const payload = JSON.stringify(catalog)
+  if (payload.includes('\uFFFD') || /Ã.|Â./.test(payload)) {
+    throw new Error('Generated spell catalog contains replacement or mojibake characters')
+  }
+  writeFileSync(OUT, payload, 'utf8')
   console.log(`Wrote ${catalog.length} spells to ${OUT}`)
 }
 

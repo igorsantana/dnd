@@ -28,6 +28,7 @@ function normalizeCharacter(character: Character): Character {
     profile.characterClass,
     profile.classLabel,
     profile.subclassLabel,
+    profile.subclassId,
   )
 }
 
@@ -38,6 +39,13 @@ function needsCloudMigration(source: Character, normalized: Character): boolean 
     return true
   }
   if (source.subclass !== normalized.subclass) return true
+  if (source.background !== normalized.background) return true
+  if (JSON.stringify(source.spells ?? []) !== JSON.stringify(normalized.spells ?? [])) {
+    return true
+  }
+  if (JSON.stringify(source.magicItems ?? []) !== JSON.stringify(normalized.magicItems ?? [])) {
+    return true
+  }
   const sourceStyle = source.classFeatures?.fightingStyle ?? ''
   const nextStyle = normalized.classFeatures?.fightingStyle ?? ''
   if (sourceStyle !== nextStyle) return true

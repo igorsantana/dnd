@@ -72,3 +72,28 @@ export function normalizeFightingStyleId(raw: string | undefined): string | unde
   }
   return aliases[value] ?? aliases[value.replace(/\s+/g, ' ')]
 }
+
+/** Keep only valid option IDs and truncate to each feature's maxChoices. */
+export function normalizeFeatureChoices(
+  characterClass: CharacterClass,
+  subclassId: SubclassId | undefined,
+  level: string | number,
+  choices: Record<string, string[]> | undefined,
+): Record<string, string[]> {
+  const features = resolveFeatures(characterClass, subclassId, level).filter(
+    (feature) => feature.kind === 'choice' && feature.choiceKey && feature.options && feature.maxChoices,
+  )
+  const next: Record<string, string[]> = {}
+
+  for (const feature of features) {
+    const key = feature.choiceKey!
+    const validIds = new Set(feature.options!.map((option) => option.id))
+    const selected = choices?.[key] ?? []
+    const cleaned = selected.filter((id) => validIds.has(id)).slice(0, feature.maxChoices!)
+    if (cleaned.length > 0) {
+      next[key] = cleaned
+    }
+  }
+
+  return next
+}

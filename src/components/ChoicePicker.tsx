@@ -28,20 +28,22 @@ export function ChoicePicker({
 
   const selectedSet = useMemo(() => new Set(selected), [selected])
   const atCap = selected.length >= maxChoices
+  const trimmedQuery = query.trim().toLowerCase()
 
   const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase()
-    if (!q) return options
-    return options.filter((o) => o.label.toLowerCase().includes(q) || o.id.toLowerCase().includes(q))
-  }, [options, query])
+    if (!trimmedQuery) return []
+    return options.filter(
+      (o) =>
+        !selectedSet.has(o.id) &&
+        (o.label.toLowerCase().includes(trimmedQuery) ||
+          o.id.toLowerCase().includes(trimmedQuery)),
+    )
+  }, [options, selectedSet, trimmedQuery])
 
-  function toggle(id: string) {
-    if (selectedSet.has(id)) {
-      onChange(selected.filter((s) => s !== id))
-      return
-    }
-    if (atCap) return
+  function add(id: string) {
+    if (selectedSet.has(id) || atCap) return
     onChange([...selected, id])
+    setQuery('')
   }
 
   function remove(id: string) {
@@ -69,30 +71,30 @@ export function ChoicePicker({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={searchPlaceholder ?? t.searchChoices}
+            disabled={atCap}
           />
         </div>
       </div>
 
       <div className="spell-picker-options">
-        {filtered.map((entry) => {
-          const isSelected = selectedSet.has(entry.id)
-          const disabled = !isSelected && atCap
-          return (
-            <button
-              key={entry.id}
-              type="button"
-              disabled={disabled}
-              onClick={() => toggle(entry.id)}
-              className={`snes-pill ${snesButtonClass(accent)} ${
-                isSelected ? '' : 'snes-pill-muted'
-              } ${disabled ? 'opacity-40' : ''}`}
-            >
-              {entry.label}
-            </button>
-          )
-        })}
+        {filtered.map((entry) => (
+          <button
+            key={entry.id}
+            type="button"
+            onClick={() => add(entry.id)}
+            className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
+          >
+            {entry.label}
+          </button>
+        ))}
         {filtered.length === 0 && (
-          <p className="text-galaxy-color spell-picker-hint">{t.noChoicesFound}</p>
+          <p className="text-galaxy-color spell-picker-hint">
+            {trimmedQuery
+              ? t.noChoicesFound
+              : atCap
+                ? `${selected.length}/${maxChoices}`
+                : t.searchChoicesHint ?? t.searchChoices}
+          </p>
         )}
       </div>
 

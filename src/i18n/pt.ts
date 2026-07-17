@@ -112,6 +112,7 @@ export const pt = {
   },
   features: {
     searchChoices: 'Buscar opções...',
+    searchChoicesHint: 'Digite para buscar e adicionar opções.',
     noChoicesFound: 'Nenhuma opção encontrada.',
     bardicInspirationMax: 'Inspiração Bárdica (máx. usos)',
     bardicInspirationDetail: 'Dado d8 · recupera no descanso curto (Fonte de Inspiração)',

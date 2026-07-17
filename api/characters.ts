@@ -9,6 +9,7 @@ function envPassword(name: string, fallback: string): string {
 const PLAYER_PASSWORD = envPassword('PLAYER_PASSWORD', envPassword('VITE_PLAYER_PASSWORD', 'calzone'))
 const ADMIN_PASSWORD = envPassword('ADMIN_PASSWORD', envPassword('VITE_ADMIN_PASSWORD', 'calzoneduplo'))
 const INDEX_KEY = 'dnd:character-index'
+const PROFILE_IDS = new Set(['honda', 'antunes', 'keiti', 'rafael', 'leozin'])
 
 function getRedis(): Redis {
   return Redis.fromEnv()
@@ -31,14 +32,22 @@ async function writeIndex(ids: string[]): Promise<void> {
   await getRedis().set(INDEX_KEY, ids)
 }
 
-function isAuthorized(req: VercelRequest, role: 'player' | 'admin'): boolean {
+function authRole(req: VercelRequest): 'player' | 'admin' | null {
   const header = req.headers.authorization ?? ''
   const token = header.replace(/^Bearer\s+/i, '')
-  return role === 'admin' ? token === ADMIN_PASSWORD : token === PLAYER_PASSWORD
+  if (token === ADMIN_PASSWORD) return 'admin'
+  if (token === PLAYER_PASSWORD) return 'player'
+  return null
 }
 
 function storageKey(id: string): string {
   return `dnd:character:${id}`
+}
+
+function profileIdFromQuery(req: VercelRequest): string | null {
+  const value = typeof req.query.profileId === 'string' ? req.query.profileId.trim() : ''
+  if (!value || !PROFILE_IDS.has(value)) return null
+  return value
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -50,9 +59,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const redis = getRedis()
+    const role = authRole(req)
 
     if (req.method === 'GET') {
-      if (!isAuthorized(req, 'admin')) {
+      const profileId = profileIdFromQuery(req)
+
+      if (profileId) {
+        if (!role) {
+          return res.status(401).json({ error: 'Unauthorized' })
+        }
+
+        const character = await redis.get<StoredCharacter>(storageKey(profileId))
+        if (!character?.id) {
+          return res.status(404).json({ error: 'Character not found' })
+        }
+        return res.status(200).json(character)
+      }
+
+      if (role !== 'admin') {
         return res.status(401).json({ error: 'Unauthorized' })
       }
 
@@ -66,7 +90,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'POST') {
-      if (!isAuthorized(req, 'player')) {
+      if (role !== 'player' && role !== 'admin') {
         return res.status(401).json({ error: 'Unauthorized' })
       }
 
@@ -92,7 +116,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'DELETE') {
-      if (!isAuthorized(req, 'admin')) {
+      if (role !== 'admin') {
         return res.status(401).json({ error: 'Unauthorized' })
       }
 

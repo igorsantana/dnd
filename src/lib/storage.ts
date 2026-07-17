@@ -31,6 +31,26 @@ export function saveCharacter(character: Character): Character {
   return updated
 }
 
+/** Persist a character snapshot without rewriting updatedAt (used after cloud load). */
+export function cacheCharacter(character: Character): Character {
+  const characters = loadAllCharacters()
+  const indexById = characters.findIndex((c) => c.id === character.id)
+  const indexByProfile =
+    character.profileId != null
+      ? characters.findIndex((c) => c.profileId === character.profileId)
+      : -1
+  const index = indexById >= 0 ? indexById : indexByProfile
+
+  if (index >= 0) {
+    characters[index] = character
+  } else {
+    characters.push(character)
+  }
+
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(characters))
+  return character
+}
+
 export function deleteCharacter(id: string): void {
   const characters = loadAllCharacters().filter((c) => c.id !== id)
   localStorage.setItem(STORAGE_KEY, JSON.stringify(characters))

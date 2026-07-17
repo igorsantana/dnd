@@ -1,5 +1,6 @@
-import type { CharacterClass } from '../data/profiles'
-import { normalizeFightingStyleId } from '../lib/class-features'
+import type { CharacterClass, SubclassId } from '../data/profiles'
+import { getSpellById } from '../lib/spells'
+import { normalizeFeatureChoices, normalizeFightingStyleId } from '../lib/class-features'
 
 export interface Attack {
   id: string
@@ -197,11 +198,54 @@ function isLegacySpellAttackEntry(attack: Attack): boolean {
   )
 }
 
+function canonicalizeSpell(spell: Spell): Spell {
+  if (!spell.catalogId) return spell
+  const entry = getSpellById(spell.catalogId)
+  if (!entry) return spell
+  return {
+    ...spell,
+    name: entry.name,
+    school: entry.school,
+    level: String(entry.level),
+    isCantrip: entry.level === 0,
+  }
+}
+
+const TEXT_REPAIRS: Array<[RegExp, string]> = [
+  [/Charlat\uFFFDo/g, 'Charlatão'],
+  [/ala\uFFFDde/g, 'alaúde'],
+  [/m\uFFFDgico/g, 'mágico'],
+  [/at\uFFFD /g, 'até '],
+  [/d\uFFFD pra/g, 'dá pra'],
+  [/fuma\uFFFDa/g, 'fumaça'],
+  [/Ilus\uFFFDo/g, 'Ilusão'],
+  [/Disfar\uFFFDar-se/g, 'Disfarçar-se'],
+  [/Sugest\uFFFDo/g, 'Sugestão'],
+  [/Padr\uFFFDo/g, 'Padrão'],
+  [/Hipn\uFFFDtico/g, 'Hipnótico'],
+  [/Transmuta\uFFFD\uFFFDo/g, 'Transmutação'],
+  [/Evoca\uFFFD\uFFFDo/g, 'Evocação'],
+]
+
+function repairCorruptedText(value: string | undefined): string {
+  if (!value) return value ?? ''
+  return TEXT_REPAIRS.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), value)
+}
+
+function repairMagicItems(items: MagicItem[] | undefined): MagicItem[] {
+  return (items ?? []).map((item) => ({
+    ...item,
+    name: repairCorruptedText(item.name),
+    description: repairCorruptedText(item.description),
+  }))
+}
+
 export function mergeCharacterDefaults(
   character: Character,
   characterClass: CharacterClass,
   classLabel: string,
   subclassLabel?: string,
+  subclassId?: SubclassId,
 ): Character {
   const isGeraldo =
     character.profileId === 'antunes' ||
@@ -218,16 +262,35 @@ export function mergeCharacterDefaults(
     existingChoices.fightingStyle = [normalizedStyle]
   }
 
+  const normalizedChoices = normalizeFeatureChoices(
+    characterClass,
+    subclassId,
+    character.level || '5',
+    existingChoices,
+  )
+
+  const spells = (character.spells ?? []).map((spell) =>
+    canonicalizeSpell({
+      ...spell,
+      name: repairCorruptedText(spell.name),
+      school: repairCorruptedText(spell.school),
+      notes: repairCorruptedText(spell.notes),
+    }),
+  )
+
   return {
     ...createEmptyCharacter(),
     ...character,
     class: character.class || classLabel,
     // Prefer profile subclass label so mangled cloud/free-text never sticks
     subclass: subclassLabel?.trim() || character.subclass?.trim() || '',
+    background: repairCorruptedText(character.background),
+    notes: repairCorruptedText(character.notes),
     attacks,
+    magicItems: repairMagicItems(character.magicItems),
     spellAttackBonus: character.spellAttackBonus || (isGeraldo ? '+7' : ''),
     spellSaveDC: character.spellSaveDC || (isGeraldo ? '15' : ''),
-    spells: character.spells ?? [],
+    spells,
     spellSlots:
       character.spellSlots && Object.keys(character.spellSlots).length > 0
         ? character.spellSlots
@@ -236,7 +299,7 @@ export function mergeCharacterDefaults(
       ...defaultClassFeatures(characterClass),
       ...character.classFeatures,
       ...(normalizedStyle ? { fightingStyle: normalizedStyle } : {}),
-      choices: existingChoices,
+      choices: normalizedChoices,
     },
   }
 }

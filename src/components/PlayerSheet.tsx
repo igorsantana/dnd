@@ -1,14 +1,18 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Attack, Character, InventoryItem, MagicItem } from '../types/character'
 import { createEmptyCharacter, mergeCharacterDefaults } from '../types/character'
 import { getProfileById, type PlayerProfile } from '../data/profiles'
-import { loadAllCharacters, saveCharacter } from '../lib/storage'
-import { pushCharacterToCloud } from '../lib/remote-storage'
+import { cacheCharacter, loadAllCharacters, saveCharacter } from '../lib/storage'
+import {
+  fetchCharacterFromCloud,
+  pickNewerCharacter,
+  pushCharacterToCloud,
+} from '../lib/remote-storage'
 import { getSessionProfile, setSessionProfile } from '../lib/auth'
 import { isCasterClass } from '../lib/classes'
 import { pt } from '../i18n/pt'
 import { ProfilePicker } from './ProfilePicker'
-import { ClassSections } from './ClassSections'
+import { ClassFeatureSection, SpellcastingSections } from './ClassSections'
 import { SaveCelebration } from './SaveCelebration'
 import {
   SectionTitle,
@@ -44,6 +48,7 @@ function createCharacterForProfile(profile: PlayerProfile): Character {
     profile.characterClass,
     profile.classLabel,
     profile.subclassLabel,
+    profile.subclassId,
   )
 }
 
@@ -61,22 +66,14 @@ function findCharacterForProfile(characters: Character[], profileId: string): Ch
   )
 }
 
-function loadProfileData(id: string): { profile: PlayerProfile; character: Character } | null {
-  const profile = getProfileById(id)
-  if (!profile) return null
-
-  const all = loadAllCharacters()
-  const existing = findCharacterForProfile(all, id)
-  const character = existing
-    ? mergeCharacterDefaults(
-        existing,
-        profile.characterClass,
-        profile.classLabel,
-        profile.subclassLabel,
-      )
-    : createCharacterForProfile(profile)
-
-  return { profile, character }
+function normalizeForProfile(profile: PlayerProfile, character: Character): Character {
+  return mergeCharacterDefaults(
+    { ...character, profileId: profile.id },
+    profile.characterClass,
+    profile.classLabel,
+    profile.subclassLabel,
+    profile.subclassId,
+  )
 }
 
 export function PlayerSheet() {
@@ -84,29 +81,62 @@ export function PlayerSheet() {
   const [character, setCharacter] = useState<Character>(createEmptyCharacter)
   const [showCelebration, setShowCelebration] = useState(false)
   const [ready, setReady] = useState(false)
+  const [loadingProfile, setLoadingProfile] = useState(false)
+  const [cloudHint, setCloudHint] = useState<string | null>(null)
+  const loadGeneration = useRef(0)
 
   const profile = profileId ? getProfileById(profileId) : undefined
   const t = pt.sheet
   const snesColor = profile ? profileToSnesColor(profile.id) : 'galaxy'
 
+  async function loadProfile(id: string) {
+    const dataProfile = getProfileById(id)
+    if (!dataProfile) return
+
+    const generation = ++loadGeneration.current
+    setLoadingProfile(true)
+    setCloudHint(null)
+    setSessionProfile(id)
+    setProfileId(id)
+
+    const local = findCharacterForProfile(loadAllCharacters(), id)
+    const cloudResult = await fetchCharacterFromCloud(id)
+
+    if (generation !== loadGeneration.current) return
+
+    const cloud = cloudResult.character
+      ? { ...cloudResult.character, profileId: id }
+      : undefined
+    const winner = pickNewerCharacter(local, cloud)
+
+    const resolved = winner
+      ? normalizeForProfile(dataProfile, winner)
+      : createCharacterForProfile(dataProfile)
+
+    cacheCharacter(resolved)
+    setCharacter(resolved)
+
+    if (!cloudResult.available) {
+      setCloudHint(pt.admin.cloudOffline)
+    } else {
+      setCloudHint(null)
+    }
+
+    setLoadingProfile(false)
+    setReady(true)
+  }
+
   useEffect(() => {
     const savedId = getSessionProfile()
-    if (savedId) {
-      const data = loadProfileData(savedId)
-      if (data) {
-        setProfileId(savedId)
-        setCharacter(data.character)
-      }
+    if (savedId && getProfileById(savedId)) {
+      void loadProfile(savedId)
+      return
     }
     setReady(true)
   }, [])
 
   function selectProfile(id: string) {
-    const data = loadProfileData(id)
-    if (!data) return
-    setSessionProfile(id)
-    setProfileId(id)
-    setCharacter(data.character)
+    void loadProfile(id)
   }
 
   function update<K extends keyof Character>(key: K, value: Character[K]) {
@@ -192,25 +222,52 @@ export function PlayerSheet() {
     update('inventory', character.inventory.filter((i) => i.id !== id))
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!character.name.trim()) return
 
-    const saved = saveCharacter({
+    const savedLocal = saveCharacter({
       ...character,
       profileId: profileId ?? character.profileId,
     })
-    setCharacter(saved)
-    void pushCharacterToCloud(saved)
+    setCharacter(savedLocal)
+
+    const savedCloud = await pushCharacterToCloud(savedLocal)
+    if (savedCloud) {
+      const synced = cacheCharacter(savedCloud)
+      setCharacter(synced)
+      setCloudHint(null)
+    } else {
+      setCloudHint(pt.admin.cloudOffline)
+    }
     setShowCelebration(true)
   }
 
-  if (!ready) return null
+  if (!ready && !profileId) return null
 
   if (!profileId || !profile) {
     return <ProfilePicker onSelect={selectProfile} />
   }
 
+  if (loadingProfile) {
+    return (
+      <div className="app-shell min-h-screen bg-black flex items-center justify-center">
+        <p className="text-galaxy-color">{pt.admin.cloudLoading}</p>
+      </div>
+    )
+  }
+
   const isCaster = isCasterClass(profile.characterClass)
+  const classSectionProps = {
+    characterClass: profile.characterClass,
+    subclassId: profile.subclassId,
+    character,
+    onUpdateSpells: (spells: Character['spells']) => update('spells', spells),
+    onUpdateSpellSlots: (spellSlots: Character['spellSlots']) => update('spellSlots', spellSlots),
+    onUpdateClassFeatures: (classFeatures: Character['classFeatures']) =>
+      update('classFeatures', classFeatures),
+    onUpdateSpellcasting: (field: 'spellAttackBonus' | 'spellSaveDC', value: string) =>
+      update(field, value),
+  }
 
   return (
     <SnesAccentProvider color={snesColor}>
@@ -223,6 +280,9 @@ export function PlayerSheet() {
         )}
 
         <div className="sheet-page">
+          {cloudHint && (
+            <p className="text-galaxy-color sheet-cloud-hint mb-4">{cloudHint}</p>
+          )}
           <div className="sheet-layout">
             <aside className="sheet-sidebar">
               <div className="sheet-header">
@@ -289,36 +349,12 @@ export function PlayerSheet() {
                   <Field label={t.fields.platinum} value={character.currency.platinum} onChange={(v) => updateCurrency('platinum', v)} type="number" />
                 </div>
               </div>
-
             </aside>
 
-            <div className={`sheet-main ${isCaster ? 'sheet-main-caster' : ''}`}>
-              {isCaster && (
-                <div className="sheet-main-col">
-                  <ClassSections
-                    characterClass={profile.characterClass}
-                    subclassId={profile.subclassId}
-                    character={character}
-                    onUpdateSpells={(spells) => update('spells', spells)}
-                    onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}
-                    onUpdateClassFeatures={(classFeatures) => update('classFeatures', classFeatures)}
-                    onUpdateSpellcasting={(field, value) => update(field, value)}
-                  />
-                </div>
-              )}
-
+            <div className="sheet-main">
               <div className="sheet-main-col">
-                {!isCaster && (
-                  <ClassSections
-                    characterClass={profile.characterClass}
-                    subclassId={profile.subclassId}
-                    character={character}
-                    onUpdateSpells={(spells) => update('spells', spells)}
-                    onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}
-                    onUpdateClassFeatures={(classFeatures) => update('classFeatures', classFeatures)}
-                    onUpdateSpellcasting={(field, value) => update(field, value)}
-                  />
-                )}
+                {isCaster && <SpellcastingSections {...classSectionProps} />}
+
                 <div className="sheet-section">
                   <SectionTitle>{t.attacks}</SectionTitle>
                   <div>
@@ -383,6 +419,10 @@ export function PlayerSheet() {
                     <AddButton onClick={addInventoryItem} label={t.addItem} />
                   </div>
                 </div>
+              </div>
+
+              <div className="sheet-main-col">
+                <ClassFeatureSection {...classSectionProps} />
 
                 <div className="sheet-section">
                   <SectionTitle>{t.notes}</SectionTitle>
@@ -399,13 +439,13 @@ export function PlayerSheet() {
           </div>
 
           <div className="flex justify-center lg:hidden mt-8">
-            <PrimaryButton onClick={handleSave} className="w-full max-w-md text-center">
+            <PrimaryButton onClick={() => void handleSave()} className="w-full max-w-md text-center">
               {t.saveButton}
             </PrimaryButton>
           </div>
         </div>
 
-        <PrimaryButton onClick={handleSave} className="sheet-save-desktop hidden lg:block text-center">
+        <PrimaryButton onClick={() => void handleSave()} className="sheet-save-desktop hidden lg:block text-center">
           {t.saveButton}
         </PrimaryButton>
       </div>
