@@ -470,6 +470,151 @@
   margin: 0;
 }
 
+.pixel-scroll-frame {
+  --pixel-list-height: 18.45rem;
+  position: relative;
+  min-width: 0;
+  margin-bottom: 0.75rem;
+}
+
+.pixel-scroll-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.pixel-scroll-frame.has-overflow .pixel-scroll-list {
+  max-height: var(--pixel-list-height);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0 0.4rem 1.8rem 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  mask-image: linear-gradient(to bottom, #000 0, #000 calc(100% - 2rem), transparent 100%);
+}
+
+.pixel-scroll-frame.has-overflow .pixel-scroll-list::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+.pixel-scroll-cue {
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.35rem;
+  z-index: 2;
+  display: block;
+  padding: 2px 5px;
+  border: 2px solid #000;
+  background: #f7d51d;
+  box-shadow: 2px 2px 0 #000;
+  color: #111;
+  font-size: 8px;
+  line-height: 1;
+  pointer-events: none;
+  animation: pixel-scroll-bob 0.8s steps(2, end) infinite;
+}
+
+@keyframes pixel-scroll-bob {
+  50% {
+    transform: translateY(2px);
+  }
+}
+
+.compact-sheet-item {
+  display: flex;
+  align-items: stretch;
+  gap: 0.65rem;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.65rem;
+  border: 3px solid #000;
+  background: #1a1a1a;
+  box-shadow: inset -2px -2px 0 #080808, inset 2px 2px 0 #3b3b3b;
+}
+
+.compact-sheet-edit {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.compact-sheet-title {
+  color: #fff;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.compact-sheet-meta,
+.compact-sheet-detail {
+  max-width: 100%;
+  overflow: hidden;
+  color: #5a7d9a;
+  font-size: 8px;
+  line-height: 1.5;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.compact-sheet-detail {
+  opacity: 0.8;
+}
+
+.compact-edit-panel {
+  padding: 0.5rem;
+  border: 3px solid #000;
+  background: #111;
+}
+
+.compact-done {
+  display: block;
+  margin: 0.5rem 0 0 auto;
+  font-size: 8px;
+}
+
+.pixel-scroll-list > .spell-picker-selected {
+  flex-direction: column;
+  flex-wrap: nowrap;
+}
+
+.pixel-scroll-list .spell-picker-chip {
+  justify-content: space-between;
+  min-height: 3.25rem;
+  padding: 0.45rem 0.6rem;
+  border: 3px solid #000;
+  background: #1a1a1a;
+}
+
+.pixel-scroll-list .spell-picker-chip > .snes-pill {
+  max-width: calc(100% - 4rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-summary .pixel-scroll-frame {
+  --pixel-list-height: 25.5rem;
+}
+
+.admin-summary .pixel-scroll-list > .admin-summary-grid {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.admin-summary .pixel-scroll-list .admin-summary-list-item,
+.admin-summary .pixel-scroll-list .admin-summary-field {
+  min-height: 4.5rem;
+}
+
 .choice-picker-count {
   font-weight: normal;
   opacity: 0.75;

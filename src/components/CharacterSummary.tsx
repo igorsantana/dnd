@@ -8,7 +8,7 @@ import {
 } from '../lib/class-features'
 import type { ClassFeatureDef } from '../data/class-features'
 import { pt } from '../i18n/pt'
-import { SectionTitle } from './ui'
+import { PixelScrollList, SectionTitle } from './ui'
 
 function hasText(value: string | undefined): boolean {
   return Boolean(value?.trim())
@@ -45,6 +45,12 @@ function SummaryField({ label, value }: { label: string; value: string }) {
 function featureLabel(feature: ClassFeatureDef): string {
   const labels = pt.features as Record<string, string>
   return labels[feature.labelKey] ?? feature.labelKey
+}
+
+function featureDetail(feature: ClassFeatureDef): string | undefined {
+  if (!feature.detailKey) return undefined
+  const labels = pt.features as Record<string, string>
+  return labels[feature.detailKey]
 }
 
 function resolveProfileClass(character: Character): {
@@ -119,13 +125,16 @@ function classFeatureRows(
       if (typeof value === 'boolean') {
         if (value) rows.push({ label: featureLabel(feature), value: 'Sim' })
       } else if (hasText(value)) {
-        rows.push({ label: featureLabel(feature), value: value! })
+        rows.push({
+          label: featureLabel(feature),
+          value: [value!, featureDetail(feature)].filter(Boolean).join(' · '),
+        })
       }
       continue
     }
 
     if (feature.kind === 'info') {
-      rows.push({ label: featureLabel(feature), value: '—' })
+      rows.push({ label: featureLabel(feature), value: featureDetail(feature) ?? 'Ativo' })
       continue
     }
 
@@ -173,9 +182,12 @@ export function CharacterSummary({ character }: { character: Character }) {
   )
   const slotLevels = Object.keys(character.spellSlots).sort((a, b) => Number(a) - Number(b))
 
-  const hasAttacks = character.attacks.some((a) => hasText(a.name))
-  const hasMagicItems = character.magicItems.some((i) => hasText(i.name))
-  const hasInventory = character.inventory.some((i) => hasText(i.name))
+  const visibleAttacks = character.attacks.filter((a) => hasText(a.name))
+  const visibleMagicItems = character.magicItems.filter((i) => hasText(i.name))
+  const visibleInventory = character.inventory.filter((i) => hasText(i.name))
+  const hasAttacks = visibleAttacks.length > 0
+  const hasMagicItems = visibleMagicItems.length > 0
+  const hasInventory = visibleInventory.length > 0
   const hasSlots = slotLevels.some((lvl) => {
     const slot = character.spellSlots[lvl]
     return hasText(slot?.total) && slot.total !== '0'
@@ -231,7 +243,9 @@ export function CharacterSummary({ character }: { character: Character }) {
           !hasText(character.hpCurrent) &&
           !hasText(character.hpMax) &&
           !hasText(character.armorClass) &&
-          !hasText(character.initiative)
+          !hasText(character.initiative) &&
+          !hasText(character.speed) &&
+          !hasText(character.proficiencyBonus)
         }
       >
         <div className="admin-summary-grid">
@@ -270,10 +284,9 @@ export function CharacterSummary({ character }: { character: Character }) {
       </SummarySection>
 
       <SummarySection title={t.attacks} empty={!hasAttacks}>
-        <ul className="admin-summary-list">
-          {character.attacks
-            .filter((a) => hasText(a.name))
-            .map((a) => (
+        <PixelScrollList count={visibleAttacks.length}>
+          <ul className="admin-summary-list">
+            {visibleAttacks.map((a) => (
               <li key={a.id} className="admin-summary-list-item">
                 <span className="text-white">{a.name}</span>
                 <span className="text-galaxy-color">
@@ -282,34 +295,44 @@ export function CharacterSummary({ character }: { character: Character }) {
                 {hasText(a.notes) && <span className="text-galaxy-color opacity-70">{a.notes}</span>}
               </li>
             ))}
-        </ul>
+          </ul>
+        </PixelScrollList>
       </SummarySection>
 
       <SummarySection title={tc.cantrips} empty={cantrips.length === 0}>
-        <ul className="admin-summary-pills">
-          {cantrips.map((s) => (
-            <li key={s.id} className="admin-summary-pill">
-              {s.name}
-            </li>
-          ))}
-        </ul>
+        <PixelScrollList count={cantrips.length}>
+          <ul className="admin-summary-list">
+            {cantrips.map((s) => (
+              <li key={s.id} className="admin-summary-list-item">
+                <span className="text-white">{s.name}</span>
+                <span className="text-galaxy-color">{s.school}</span>
+                {hasText(s.notes) && <span className="text-galaxy-color opacity-70">{s.notes}</span>}
+              </li>
+            ))}
+          </ul>
+        </PixelScrollList>
       </SummarySection>
 
-      <SummarySection title={tc.preparedSpells} empty={spells.length === 0}>
-        <ul className="admin-summary-list">
-          {spells.map((s) => (
-            <li key={s.id} className="admin-summary-list-item">
-              <span className="text-white">
-                {s.name}
-                {hasText(s.level) && ` (${s.level})`}
-              </span>
-              <span className="text-galaxy-color">
-                {[s.school, s.prepared ? tc.prepared : ''].filter(Boolean).join(' · ')}
-              </span>
-              {hasText(s.notes) && <span className="text-galaxy-color opacity-70">{s.notes}</span>}
-            </li>
-          ))}
-        </ul>
+      <SummarySection
+        title={characterClass === 'wizard' ? tc.preparedSpells : tc.knownSpells}
+        empty={spells.length === 0}
+      >
+        <PixelScrollList count={spells.length}>
+          <ul className="admin-summary-list">
+            {spells.map((s) => (
+              <li key={s.id} className="admin-summary-list-item">
+                <span className="text-white">
+                  {s.name}
+                  {hasText(s.level) && ` (${s.level})`}
+                </span>
+                <span className="text-galaxy-color">
+                  {[s.school, s.prepared ? tc.prepared : ''].filter(Boolean).join(' · ')}
+                </span>
+                {hasText(s.notes) && <span className="text-galaxy-color opacity-70">{s.notes}</span>}
+              </li>
+            ))}
+          </ul>
+        </PixelScrollList>
       </SummarySection>
 
       <SummarySection title={tc.spellSlots} empty={!hasSlots}>
@@ -330,18 +353,19 @@ export function CharacterSummary({ character }: { character: Character }) {
       </SummarySection>
 
       <SummarySection title={ta.classFeatures} empty={featureRows.length === 0}>
-        <div className="admin-summary-grid">
-          {featureRows.map((row) => (
-            <SummaryField key={`${row.label}-${row.value}`} label={row.label} value={row.value} />
-          ))}
-        </div>
+        <PixelScrollList count={featureRows.length}>
+          <div className="admin-summary-grid">
+            {featureRows.map((row) => (
+              <SummaryField key={`${row.label}-${row.value}`} label={row.label} value={row.value} />
+            ))}
+          </div>
+        </PixelScrollList>
       </SummarySection>
 
       <SummarySection title={t.magicItems} empty={!hasMagicItems}>
-        <ul className="admin-summary-list">
-          {character.magicItems
-            .filter((i) => hasText(i.name))
-            .map((i) => (
+        <PixelScrollList count={visibleMagicItems.length}>
+          <ul className="admin-summary-list">
+            {visibleMagicItems.map((i) => (
               <li key={i.id} className="admin-summary-list-item">
                 <span className="text-white">
                   {i.name}
@@ -352,7 +376,8 @@ export function CharacterSummary({ character }: { character: Character }) {
                 )}
               </li>
             ))}
-        </ul>
+          </ul>
+        </PixelScrollList>
       </SummarySection>
 
       <SummarySection title={t.currency}>
@@ -360,10 +385,9 @@ export function CharacterSummary({ character }: { character: Character }) {
       </SummarySection>
 
       <SummarySection title={t.inventory} empty={!hasInventory}>
-        <ul className="admin-summary-list">
-          {character.inventory
-            .filter((i) => hasText(i.name))
-            .map((i) => (
+        <PixelScrollList count={visibleInventory.length}>
+          <ul className="admin-summary-list">
+            {visibleInventory.map((i) => (
               <li key={i.id} className="admin-summary-list-item">
                 <span className="text-white">
                   {i.name}
@@ -372,7 +396,8 @@ export function CharacterSummary({ character }: { character: Character }) {
                 {hasText(i.notes) && <span className="text-galaxy-color opacity-70">{i.notes}</span>}
               </li>
             ))}
-        </ul>
+          </ul>
+        </PixelScrollList>
       </SummarySection>
 
       <SummarySection title={t.notes} empty={!hasText(character.notes)}>

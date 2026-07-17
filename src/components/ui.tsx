@@ -183,3 +183,51 @@ export function SheetRow({ children, onRemove }: SheetRowProps) {
     </div>
   )
 }
+
+export function PixelScrollList({
+  count,
+  children,
+  className,
+}: {
+  count: number
+  children: React.ReactNode
+  className?: string
+}) {
+  return (
+    <div className={`pixel-scroll-frame ${count > 5 ? 'has-overflow' : ''} ${className ?? ''}`}>
+      <div
+        className="pixel-scroll-list"
+        tabIndex={count > 5 ? 0 : undefined}
+        aria-label={count > 5 ? 'Lista rolável' : undefined}
+      >
+        {children}
+      </div>
+      {count > 5 && <span className="pixel-scroll-cue">▼</span>}
+    </div>
+  )
+}
+
+export function CompactSheetItem({
+  title,
+  meta,
+  detail,
+  onEdit,
+  onRemove,
+}: {
+  title: string
+  meta?: string
+  detail?: string
+  onEdit: () => void
+  onRemove: () => void
+}) {
+  return (
+    <div className="compact-sheet-item">
+      <button type="button" className="compact-sheet-edit" onClick={onEdit}>
+        <span className="compact-sheet-title">{title || 'Novo item'}</span>
+        {meta && <span className="compact-sheet-meta">{meta}</span>}
+        {detail && <span className="compact-sheet-detail">{detail}</span>}
+      </button>
+      <RemoveButton onClick={onRemove} />
+    </div>
+  )
+}

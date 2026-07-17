@@ -22,6 +22,8 @@ import {
   PrimaryButton,
   CheckboxField,
   SheetRow,
+  CompactSheetItem,
+  PixelScrollList,
 } from './ui'
 import { AvatarFrame } from './AvatarFrame'
 import { SnesAccentProvider } from '../contexts/SnesAccentContext'
@@ -83,6 +85,8 @@ export function PlayerSheet() {
   const [ready, setReady] = useState(false)
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [cloudHint, setCloudHint] = useState<string | null>(null)
+  const [editingAttackId, setEditingAttackId] = useState<string | null>(null)
+  const [editingMagicItemId, setEditingMagicItemId] = useState<string | null>(null)
   const loadGeneration = useRef(0)
 
   const profile = profileId ? getProfileById(profileId) : undefined
@@ -167,6 +171,7 @@ export function PlayerSheet() {
       notes: '',
     }
     update('attacks', [...character.attacks, attack])
+    setEditingAttackId(attack.id)
   }
 
   function updateAttack(id: string, patch: Partial<Attack>) {
@@ -178,6 +183,7 @@ export function PlayerSheet() {
 
   function removeAttack(id: string) {
     update('attacks', character.attacks.filter((a) => a.id !== id))
+    if (editingAttackId === id) setEditingAttackId(null)
   }
 
   function addMagicItem() {
@@ -188,6 +194,7 @@ export function PlayerSheet() {
       attuned: false,
     }
     update('magicItems', [...character.magicItems, item])
+    setEditingMagicItemId(item.id)
   }
 
   function updateMagicItem(id: string, patch: Partial<MagicItem>) {
@@ -199,6 +206,7 @@ export function PlayerSheet() {
 
   function removeMagicItem(id: string) {
     update('magicItems', character.magicItems.filter((m) => m.id !== id))
+    if (editingMagicItemId === id) setEditingMagicItemId(null)
   }
 
   function addInventoryItem() {
@@ -357,58 +365,90 @@ export function PlayerSheet() {
 
                 <div className="sheet-section">
                   <SectionTitle>{t.attacks}</SectionTitle>
-                  <div>
+                  <PixelScrollList count={character.attacks.length}>
                     {character.attacks.map((attack) => (
-                      <SheetRow key={attack.id} onRemove={() => removeAttack(attack.id)}>
-                        <Field label={t.fields.attackName} value={attack.name} onChange={(v) => updateAttack(attack.id, { name: v })} className="col-span-2" />
-                        <Field label={t.fields.attackBonus} value={attack.bonus} onChange={(v) => updateAttack(attack.id, { bonus: v })} placeholder="+5" />
-                        <Field label={t.fields.attackDamage} value={attack.damage} onChange={(v) => updateAttack(attack.id, { damage: v })} placeholder="1d8+3" />
-                        <Field label={t.fields.attackType} value={attack.damageType} onChange={(v) => updateAttack(attack.id, { damageType: v })} placeholder="cortante" />
-                        <Field label={t.fields.attackNotes} value={attack.notes} onChange={(v) => updateAttack(attack.id, { notes: v })} className="col-span-2" />
-                      </SheetRow>
+                      editingAttackId === attack.id ? (
+                        <div key={attack.id} className="compact-edit-panel">
+                          <SheetRow onRemove={() => removeAttack(attack.id)}>
+                            <Field label={t.fields.attackName} value={attack.name} onChange={(v) => updateAttack(attack.id, { name: v })} className="col-span-2" />
+                            <Field label={t.fields.attackBonus} value={attack.bonus} onChange={(v) => updateAttack(attack.id, { bonus: v })} placeholder="+5" />
+                            <Field label={t.fields.attackDamage} value={attack.damage} onChange={(v) => updateAttack(attack.id, { damage: v })} placeholder="1d8+3" />
+                            <Field label={t.fields.attackType} value={attack.damageType} onChange={(v) => updateAttack(attack.id, { damageType: v })} placeholder="cortante" />
+                            <Field label={t.fields.attackNotes} value={attack.notes} onChange={(v) => updateAttack(attack.id, { notes: v })} className="col-span-2" />
+                          </SheetRow>
+                          <button type="button" className="snes-link text-nature-color compact-done" onClick={() => setEditingAttackId(null)}>
+                            [✓] Concluir
+                          </button>
+                        </div>
+                      ) : (
+                        <CompactSheetItem
+                          key={attack.id}
+                          title={attack.name}
+                          meta={[attack.bonus, attack.damage, attack.damageType].filter(Boolean).join(' · ')}
+                          detail={attack.notes}
+                          onEdit={() => setEditingAttackId(attack.id)}
+                          onRemove={() => removeAttack(attack.id)}
+                        />
+                      )
                     ))}
-                    <AddButton onClick={addAttack} label={t.addAttack} />
-                  </div>
+                  </PixelScrollList>
+                  <AddButton onClick={addAttack} label={t.addAttack} />
                 </div>
 
                 <div className="sheet-section">
                   <SectionTitle>{t.magicItems}</SectionTitle>
-                  <div>
+                  <PixelScrollList count={character.magicItems.length}>
                     {character.magicItems.map((item) => (
-                      <div key={item.id} className="sheet-row sheet-row-stack">
-                        <div className="sheet-row-fields sheet-row-fields-wide">
-                          <Field label={t.fields.itemName} value={item.name} onChange={(v) => updateMagicItem(item.id, { name: v })} />
-                          <CheckboxField
-                            label={t.fields.attuned}
-                            checked={item.attuned}
-                            onChange={(v) => updateMagicItem(item.id, { attuned: v })}
-                          />
-                          <TextArea
-                            label={t.fields.description}
-                            value={item.description}
-                            onChange={(v) => updateMagicItem(item.id, { description: v })}
-                            rows={2}
-                          />
+                      editingMagicItemId === item.id ? (
+                        <div key={item.id} className="compact-edit-panel">
+                          <div className="sheet-row sheet-row-stack">
+                            <div className="sheet-row-fields sheet-row-fields-wide">
+                              <Field label={t.fields.itemName} value={item.name} onChange={(v) => updateMagicItem(item.id, { name: v })} />
+                              <CheckboxField
+                                label={t.fields.attuned}
+                                checked={item.attuned}
+                                onChange={(v) => updateMagicItem(item.id, { attuned: v })}
+                              />
+                              <TextArea
+                                label={t.fields.description}
+                                value={item.description}
+                                onChange={(v) => updateMagicItem(item.id, { description: v })}
+                                rows={2}
+                              />
+                            </div>
+                            <div className="sheet-row-action">
+                              <button
+                                type="button"
+                                onClick={() => removeMagicItem(item.id)}
+                                className="snes-link text-plumber-color"
+                                title="Remover"
+                              >
+                                [x]
+                              </button>
+                            </div>
                         </div>
-                        <div className="sheet-row-action">
-                          <button
-                            type="button"
-                            onClick={() => removeMagicItem(item.id)}
-                            className="snes-link text-plumber-color"
-                            title="Remover"
-                          >
-                            [x]
+                          <button type="button" className="snes-link text-nature-color compact-done" onClick={() => setEditingMagicItemId(null)}>
+                            [✓] Concluir
                           </button>
                         </div>
-                      </div>
+                      ) : (
+                        <CompactSheetItem
+                          key={item.id}
+                          title={item.name}
+                          meta={item.attuned ? t.fields.attuned : undefined}
+                          detail={item.description}
+                          onEdit={() => setEditingMagicItemId(item.id)}
+                          onRemove={() => removeMagicItem(item.id)}
+                        />
+                      )
                     ))}
-                    <AddButton onClick={addMagicItem} label={t.addMagicItem} />
-                  </div>
+                  </PixelScrollList>
+                  <AddButton onClick={addMagicItem} label={t.addMagicItem} />
                 </div>
 
                 <div className="sheet-section">
                   <SectionTitle>{t.inventory}</SectionTitle>
-                  <div>
+                  <PixelScrollList count={character.inventory.length}>
                     {character.inventory.map((item) => (
                       <SheetRow key={item.id} onRemove={() => removeInventoryItem(item.id)}>
                         <Field label={t.fields.item} value={item.name} onChange={(v) => updateInventoryItem(item.id, { name: v })} className="col-span-2" />
@@ -416,8 +456,8 @@ export function PlayerSheet() {
                         <Field label={t.fields.notes} value={item.notes} onChange={(v) => updateInventoryItem(item.id, { notes: v })} className="col-span-2" />
                       </SheetRow>
                     ))}
-                    <AddButton onClick={addInventoryItem} label={t.addItem} />
-                  </div>
+                  </PixelScrollList>
+                  <AddButton onClick={addInventoryItem} label={t.addItem} />
                 </div>
               </div>
 
