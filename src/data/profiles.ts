@@ -1,11 +1,20 @@
 export type CharacterClass = 'wizard' | 'bard' | 'ranger' | 'fighter'
 
+export type SubclassId =
+  | 'abjuration'
+  | 'eloquence'
+  | 'gloomStalker'
+  | 'battleMaster'
+  | 'samurai'
+
 export interface PlayerProfile {
   id: string
   playerName: string
   characterName: string
   characterClass: CharacterClass
   classLabel: string
+  subclassId: SubclassId
+  subclassLabel: string
   image: string
   accentColor: string
 }
@@ -17,6 +26,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Yohann',
     characterClass: 'wizard',
     classLabel: 'Mago',
+    subclassId: 'abjuration',
+    subclassLabel: 'Abjuração',
     image: '/profiles/honda.png',
     accentColor: '#4a7cff',
   },
@@ -26,6 +37,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Geraldo',
     characterClass: 'bard',
     classLabel: 'Bardo',
+    subclassId: 'eloquence',
+    subclassLabel: 'Eloquência',
     image: '/profiles/antunes.png',
     accentColor: '#c44dff',
   },
@@ -35,6 +48,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Wellby',
     characterClass: 'ranger',
     classLabel: 'Patrulheiro',
+    subclassId: 'gloomStalker',
+    subclassLabel: 'Gloom Stalker',
     image: '/profiles/keiti.png',
     accentColor: '#3dba6a',
   },
@@ -44,6 +59,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Sebastião',
     characterClass: 'fighter',
     classLabel: 'Guerreiro',
+    subclassId: 'battleMaster',
+    subclassLabel: 'Battle Master',
     image: '/profiles/rafael.png',
     accentColor: '#e85d4c',
   },
@@ -53,6 +70,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Kaneh',
     characterClass: 'fighter',
     classLabel: 'Guerreiro',
+    subclassId: 'samurai',
+    subclassLabel: 'Samurai',
     image: '/profiles/leozin.png',
     accentColor: '#f0a030',
   },

@@ -1,5 +1,12 @@
 import type { ReactNode } from 'react'
 import type { Character, ClassFeatures } from '../types/character'
+import { getProfileById, PLAYER_PROFILES, type CharacterClass, type SubclassId } from '../data/profiles'
+import {
+  choiceLabels,
+  getAttacksPerTurn,
+  resolveFeatures,
+} from '../lib/class-features'
+import type { ClassFeatureDef } from '../data/class-features'
 import { pt } from '../i18n/pt'
 import { SectionTitle } from './ui'
 
@@ -35,30 +42,106 @@ function SummaryField({ label, value }: { label: string; value: string }) {
   )
 }
 
-function classFeatureRows(features: ClassFeatures): { label: string; value: string }[] {
+function featureLabel(feature: ClassFeatureDef): string {
+  const labels = pt.features as Record<string, string>
+  return labels[feature.labelKey] ?? feature.labelKey
+}
+
+function resolveProfileClass(character: Character): {
+  characterClass?: CharacterClass
+  subclassId?: SubclassId
+} {
+  const profile =
+    (character.profileId ? getProfileById(character.profileId) : undefined) ??
+    PLAYER_PROFILES.find(
+      (entry) =>
+        entry.characterName.toLowerCase() === character.name.trim().toLowerCase() &&
+        entry.playerName.toLowerCase() === character.playerName.trim().toLowerCase(),
+    )
+  if (profile) {
+    return { characterClass: profile.characterClass, subclassId: profile.subclassId }
+  }
+  return {}
+}
+
+function classFeatureRows(
+  features: ClassFeatures,
+  characterClass: CharacterClass | undefined,
+  subclassId: SubclassId | undefined,
+  level: string,
+): { label: string; value: string }[] {
   const t = pt.classes
   const rows: { label: string; value: string }[] = []
+  const choices = features.choices ?? {}
 
-  const push = (label: string, value: string | boolean | undefined) => {
-    if (typeof value === 'boolean') {
-      if (value) rows.push({ label, value: 'Sim' })
-      return
-    }
-    if (hasText(value)) rows.push({ label, value: value! })
+  if (characterClass === 'fighter' || characterClass === 'ranger') {
+    rows.push({
+      label: t.attacksPerTurn,
+      value: String(getAttacksPerTurn(characterClass, level)),
+    })
   }
 
-  push(t.fightingStyle, features.fightingStyle)
-  push(t.secondWind, features.secondWind)
-  push(t.actionSurge, features.actionSurgeUses)
-  push(t.extraAttack, features.extraAttack)
-  push(t.bardicInspiration, features.bardicInspirationDie)
-  push(t.bardicInspirationUses, features.bardicInspirationUses)
-  push(t.jackOfAllTrades, features.jackOfAllTrades)
-  push(t.favoredEnemy, features.favoredEnemy)
-  push(t.favoredTerrain, features.favoredTerrain)
-  push(t.arcaneRecovery, features.arcaneRecovery)
-  push(t.ritualCasting, features.ritualCasting)
-  push(t.spellbookNotes, features.spellbookNotes)
+  if (!characterClass) {
+    // Fallback for unknown characters: legacy scalar fields only (skip Extra Attack)
+    const push = (label: string, value: string | boolean | undefined) => {
+      if (typeof value === 'boolean') {
+        if (value) rows.push({ label, value: 'Sim' })
+        return
+      }
+      if (hasText(value)) rows.push({ label, value: value! })
+    }
+    push(t.fightingStyle, features.fightingStyle)
+    push(t.secondWind, features.secondWind)
+    push(t.actionSurge, features.actionSurgeUses)
+    push(t.bardicInspiration, features.bardicInspirationDie)
+    push(t.bardicInspirationUses, features.bardicInspirationUses)
+    push(t.jackOfAllTrades, features.jackOfAllTrades)
+    push(t.favoredEnemy, features.favoredEnemy)
+    push(t.favoredTerrain, features.favoredTerrain)
+    push(t.arcaneRecovery, features.arcaneRecovery)
+    push(t.ritualCasting, features.ritualCasting)
+    push(t.spellbookNotes, features.spellbookNotes)
+    return rows
+  }
+
+  const resolved = resolveFeatures(characterClass, subclassId, level)
+
+  for (const feature of resolved) {
+    if (feature.id === 'ritualCasting') {
+      if (features.ritualCasting) {
+        rows.push({ label: featureLabel(feature), value: 'Sim' })
+      }
+      continue
+    }
+
+    if (feature.kind === 'value' && feature.valueKey && feature.valueKey !== 'choices') {
+      const value = features[feature.valueKey]
+      if (typeof value === 'boolean') {
+        if (value) rows.push({ label: featureLabel(feature), value: 'Sim' })
+      } else if (hasText(value)) {
+        rows.push({ label: featureLabel(feature), value: value! })
+      }
+      continue
+    }
+
+    if (feature.kind === 'info') {
+      rows.push({ label: featureLabel(feature), value: '—' })
+      continue
+    }
+
+    if (feature.kind === 'choice' && feature.choiceKey) {
+      const selected = choices[feature.choiceKey] ?? []
+      if (selected.length === 0) continue
+      rows.push({
+        label: featureLabel(feature),
+        value: choiceLabels(feature, selected).join(', '),
+      })
+    }
+  }
+
+  if (characterClass === 'wizard' && hasText(features.spellbookNotes)) {
+    rows.push({ label: t.spellbookNotes, value: features.spellbookNotes! })
+  }
 
   return rows
 }
@@ -78,10 +161,16 @@ export function CharacterSummary({ character }: { character: Character }) {
   const tc = pt.classes
   const ta = pt.admin
   const { abilities } = character
+  const { characterClass, subclassId } = resolveProfileClass(character)
 
   const cantrips = character.spells.filter((s) => s.isCantrip)
   const spells = character.spells.filter((s) => !s.isCantrip)
-  const featureRows = classFeatureRows(character.classFeatures)
+  const featureRows = classFeatureRows(
+    character.classFeatures,
+    characterClass,
+    subclassId,
+    character.level,
+  )
   const slotLevels = Object.keys(character.spellSlots).sort((a, b) => Number(a) - Number(b))
 
   const hasAttacks = character.attacks.some((a) => hasText(a.name))
@@ -99,6 +188,7 @@ export function CharacterSummary({ character }: { character: Character }) {
         <p className="text-galaxy-color admin-summary-subtitle">
           {character.playerName && `${character.playerName} · `}
           {character.class}
+          {character.subclass && ` · ${character.subclass}`}
           {character.level && ` · ${t.fields.level} ${character.level}`}
         </p>
         <p className="text-galaxy-color admin-summary-updated">
@@ -242,7 +332,7 @@ export function CharacterSummary({ character }: { character: Character }) {
       <SummarySection title={ta.classFeatures} empty={featureRows.length === 0}>
         <div className="admin-summary-grid">
           {featureRows.map((row) => (
-            <SummaryField key={row.label} label={row.label} value={row.value} />
+            <SummaryField key={`${row.label}-${row.value}`} label={row.label} value={row.value} />
           ))}
         </div>
       </SummarySection>

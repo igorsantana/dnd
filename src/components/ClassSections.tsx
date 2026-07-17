@@ -1,12 +1,16 @@
-import type { CharacterClass } from '../data/profiles'
+import type { CharacterClass, SubclassId } from '../data/profiles'
 import type { Character, ClassFeatures } from '../types/character'
+import type { ClassFeatureDef } from '../data/class-features'
 import { isCasterClass } from '../lib/classes'
+import { getAttacksPerTurn, resolveFeatures } from '../lib/class-features'
 import { pt } from '../i18n/pt'
 import { SpellPicker } from './SpellPicker'
+import { ChoicePicker } from './ChoicePicker'
 import { SectionTitle, Field, TextArea, CheckboxField } from './ui'
 
 interface ClassSectionsProps {
   characterClass: CharacterClass
+  subclassId?: SubclassId
   character: Character
   onUpdateSpells: (spells: Character['spells']) => void
   onUpdateSpellSlots: (slots: Character['spellSlots']) => void
@@ -17,8 +21,20 @@ interface ClassSectionsProps {
   ) => void
 }
 
+function featureLabel(feature: ClassFeatureDef): string {
+  const labels = pt.features as Record<string, string>
+  return labels[feature.labelKey] ?? feature.labelKey
+}
+
+function featureDetail(feature: ClassFeatureDef): string | undefined {
+  if (!feature.detailKey) return undefined
+  const labels = pt.features as Record<string, string>
+  return labels[feature.detailKey]
+}
+
 export function ClassSections({
   characterClass,
+  subclassId,
   character,
   onUpdateSpells,
   onUpdateSpellSlots,
@@ -27,9 +43,26 @@ export function ClassSections({
 }: ClassSectionsProps) {
   const t = pt.classes
   const isCaster = isCasterClass(characterClass)
+  const features = resolveFeatures(characterClass, subclassId, character.level)
+  const attacksPerTurn = getAttacksPerTurn(characterClass, character.level)
+  const showAttacksPerTurn = characterClass === 'fighter' || characterClass === 'ranger'
+  const choices = character.classFeatures.choices ?? {}
 
   function updateFeature(key: keyof ClassFeatures, value: string | boolean) {
     onUpdateClassFeatures({ ...character.classFeatures, [key]: value })
+  }
+
+  function updateChoices(choiceKey: string, next: string[]) {
+    const updatedChoices = { ...choices, [choiceKey]: next }
+    const patch: ClassFeatures = {
+      ...character.classFeatures,
+      choices: updatedChoices,
+    }
+    // Keep legacy fightingStyle scalar in sync for older summary code
+    if (choiceKey === 'fightingStyle') {
+      patch.fightingStyle = next[0] ?? ''
+    }
+    onUpdateClassFeatures(patch)
   }
 
   function updateSlot(level: string, field: 'total' | 'used', value: string) {
@@ -44,6 +77,12 @@ export function ClassSections({
 
   const cantrips = character.spells.filter((s) => s.isCantrip)
   const leveledSpells = character.spells.filter((s) => !s.isCantrip)
+
+  const infoFeatures = features.filter(
+    (f) => f.kind === 'info' && f.id !== 'ritualCasting',
+  )
+  const valueFeatures = features.filter((f) => f.kind === 'value')
+  const choiceFeatures = features.filter((f) => f.kind === 'choice')
 
   return (
     <>
@@ -121,114 +160,78 @@ export function ClassSections({
         </>
       )}
 
-      {characterClass === 'wizard' && (
+      {(showAttacksPerTurn || infoFeatures.length > 0 || valueFeatures.length > 0 || choiceFeatures.length > 0) && (
         <div className="sheet-section">
-          <SectionTitle>{t.wizardFeatures}</SectionTitle>
-          <div className="field-grid field-grid-2">
-            <Field
-              label={t.arcaneRecovery}
-              value={character.classFeatures.arcaneRecovery ?? ''}
-              onChange={(v) => updateFeature('arcaneRecovery', v)}
-              placeholder={t.arcaneRecoveryPlaceholder}
-            />
-            <CheckboxField
-              label={t.ritualCasting}
-              checked={character.classFeatures.ritualCasting ?? false}
-              onChange={(v) => updateFeature('ritualCasting', v)}
-            />
-          </div>
-          <div className="mt-3">
-            <TextArea
-              label={t.spellbookNotes}
-              value={character.classFeatures.spellbookNotes ?? ''}
-              onChange={(v) => updateFeature('spellbookNotes', v)}
-              rows={3}
-            />
-          </div>
-        </div>
-      )}
+          <SectionTitle>{t.classFeatures}</SectionTitle>
 
-      {characterClass === 'bard' && (
-        <div className="sheet-section">
-          <SectionTitle>{t.bardFeatures}</SectionTitle>
-          <div className="field-grid field-grid-2 field-grid-3-at-xl">
-            <Field
-              label={t.bardicInspiration}
-              value={character.classFeatures.bardicInspirationDie ?? ''}
-              onChange={(v) => updateFeature('bardicInspirationDie', v)}
-              placeholder="d8"
-            />
-            <Field
-              label={t.bardicInspirationUses}
-              value={character.classFeatures.bardicInspirationUses ?? ''}
-              onChange={(v) => updateFeature('bardicInspirationUses', v)}
-              placeholder="Ex: 3"
-            />
-            <Field
-              label={t.jackOfAllTrades}
-              value={character.classFeatures.jackOfAllTrades ?? ''}
-              onChange={(v) => updateFeature('jackOfAllTrades', v)}
-              placeholder="+1"
-            />
-          </div>
-        </div>
-      )}
+          {showAttacksPerTurn && (
+            <div className="feature-info-block">
+              <p className="sheet-label">{t.attacksPerTurn}</p>
+              <p className="text-white feature-info-value">{attacksPerTurn}</p>
+            </div>
+          )}
 
-      {characterClass === 'ranger' && (
-        <div className="sheet-section">
-          <SectionTitle>{t.rangerFeatures}</SectionTitle>
-          <div className="field-grid field-grid-2 field-grid-3-at-xl">
-            <Field
-              label={t.favoredEnemy}
-              value={character.classFeatures.favoredEnemy ?? ''}
-              onChange={(v) => updateFeature('favoredEnemy', v)}
-              placeholder="Ex: Orcs, Goblins..."
-            />
-            <Field
-              label={t.favoredTerrain}
-              value={character.classFeatures.favoredTerrain ?? ''}
-              onChange={(v) => updateFeature('favoredTerrain', v)}
-              placeholder="Ex: Floresta, Montanha..."
-            />
-            <Field
-              label={t.fightingStyle}
-              value={character.classFeatures.fightingStyle ?? ''}
-              onChange={(v) => updateFeature('fightingStyle', v)}
-              placeholder={t.fightingStylePlaceholder}
-            />
-          </div>
-        </div>
-      )}
+          {valueFeatures.map((feature) => {
+            const key = feature.valueKey
+            if (!key || key === 'choices' || key === 'ritualCasting') return null
+            const value = String(character.classFeatures[key] ?? '')
+            return (
+              <div key={feature.id} className="mt-3">
+                <Field
+                  label={featureLabel(feature)}
+                  value={value}
+                  onChange={(v) => updateFeature(key, v)}
+                  placeholder={featureDetail(feature)}
+                />
+                {featureDetail(feature) && (
+                  <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
+                )}
+              </div>
+            )
+          })}
 
-      {characterClass === 'fighter' && (
-        <div className="sheet-section">
-          <SectionTitle>{t.fighterFeatures}</SectionTitle>
-          <div className="field-grid field-grid-2 field-grid-3-at-xl">
-            <Field
-              label={t.secondWind}
-              value={character.classFeatures.secondWind ?? ''}
-              onChange={(v) => updateFeature('secondWind', v)}
-              placeholder={t.secondWindPlaceholder}
-            />
-            <Field
-              label={t.actionSurge}
-              value={character.classFeatures.actionSurgeUses ?? ''}
-              onChange={(v) => updateFeature('actionSurgeUses', v)}
-              placeholder={t.actionSurgePlaceholder}
-            />
-            <Field
-              label={t.extraAttack}
-              value={character.classFeatures.extraAttack ?? ''}
-              onChange={(v) => updateFeature('extraAttack', v)}
-              placeholder={t.extraAttackPlaceholder}
-            />
-            <Field
-              label={t.fightingStyle}
-              value={character.classFeatures.fightingStyle ?? ''}
-              onChange={(v) => updateFeature('fightingStyle', v)}
-              placeholder={t.fightingStylePlaceholder}
-            />
-          </div>
+          {characterClass === 'wizard' && (
+            <div className="mt-3 field-grid field-grid-2">
+              <CheckboxField
+                label={t.ritualCasting}
+                checked={character.classFeatures.ritualCasting ?? false}
+                onChange={(v) => updateFeature('ritualCasting', v)}
+              />
+              <TextArea
+                label={t.spellbookNotes}
+                value={character.classFeatures.spellbookNotes ?? ''}
+                onChange={(v) => updateFeature('spellbookNotes', v)}
+                rows={2}
+              />
+            </div>
+          )}
+
+          {infoFeatures.map((feature) => (
+            <div key={feature.id} className="feature-info-block">
+              <p className="text-white feature-info-title">{featureLabel(feature)}</p>
+              {featureDetail(feature) && (
+                <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
+              )}
+            </div>
+          ))}
+
+          {choiceFeatures.map((feature) => {
+            if (!feature.choiceKey || !feature.options || !feature.maxChoices) return null
+            return (
+              <div key={feature.id} className="mt-4">
+                <ChoicePicker
+                  label={featureLabel(feature)}
+                  options={feature.options}
+                  selected={choices[feature.choiceKey] ?? []}
+                  maxChoices={feature.maxChoices}
+                  onChange={(next) => updateChoices(feature.choiceKey!, next)}
+                />
+                {featureDetail(feature) && (
+                  <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
     </>

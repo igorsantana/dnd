@@ -43,6 +43,7 @@ function createCharacterForProfile(profile: PlayerProfile): Character {
     },
     profile.characterClass,
     profile.classLabel,
+    profile.subclassLabel,
   )
 }
 
@@ -67,7 +68,12 @@ function loadProfileData(id: string): { profile: PlayerProfile; character: Chara
   const all = loadAllCharacters()
   const existing = findCharacterForProfile(all, id)
   const character = existing
-    ? mergeCharacterDefaults(existing, profile.characterClass, profile.classLabel)
+    ? mergeCharacterDefaults(
+        existing,
+        profile.characterClass,
+        profile.classLabel,
+        profile.subclassLabel,
+      )
     : createCharacterForProfile(profile)
 
   return { profile, character }
@@ -225,7 +231,9 @@ export function PlayerSheet() {
                   <h1 className={snesTextClass(snesColor)}>{profile.characterName}</h1>
                   <p className="text-galaxy-color">{profile.playerName}</p>
                   <p className="text-galaxy-color opacity-80">
-                    {profile.classLabel} · Nível {character.level}
+                    {profile.classLabel}
+                    {profile.subclassLabel ? ` · ${profile.subclassLabel}` : ''}
+                    {` · ${t.fields.level} ${character.level}`}
                   </p>
                 </div>
               </div>
@@ -289,6 +297,7 @@ export function PlayerSheet() {
                 <div className="sheet-main-col">
                   <ClassSections
                     characterClass={profile.characterClass}
+                    subclassId={profile.subclassId}
                     character={character}
                     onUpdateSpells={(spells) => update('spells', spells)}
                     onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}
@@ -302,6 +311,7 @@ export function PlayerSheet() {
                 {!isCaster && (
                   <ClassSections
                     characterClass={profile.characterClass}
+                    subclassId={profile.subclassId}
                     character={character}
                     onUpdateSpells={(spells) => update('spells', spells)}
                     onUpdateSpellSlots={(spellSlots) => update('spellSlots', spellSlots)}

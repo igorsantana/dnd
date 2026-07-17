@@ -470,6 +470,38 @@
   margin: 0;
 }
 
+.choice-picker-count {
+  font-weight: normal;
+  opacity: 0.75;
+}
+
+.feature-info-block {
+  margin-top: 0.85rem;
+}
+
+.feature-info-block:first-child {
+  margin-top: 0;
+}
+
+.feature-info-title {
+  margin: 0 0 0.25rem;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.feature-info-value {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.feature-detail {
+  margin: 0.35rem 0 0;
+  font-size: 8px;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
 /* Login screen */
 .login-page {
   padding: 2.5rem 1.5rem;

@@ -1,4 +1,5 @@
 import type { CharacterClass } from '../data/profiles'
+import { normalizeFightingStyleId } from '../lib/class-features'
 
 export interface Attack {
   id: string
@@ -71,6 +72,8 @@ export interface ClassFeatures {
   arcaneRecovery?: string
   spellbookNotes?: string
   ritualCasting?: boolean
+  /** Multi-select feature choices keyed by feature choiceKey */
+  choices?: Record<string, string[]>
 }
 
 export interface Character {
@@ -198,17 +201,29 @@ export function mergeCharacterDefaults(
   character: Character,
   characterClass: CharacterClass,
   classLabel: string,
+  subclassLabel?: string,
 ): Character {
   const isGeraldo =
     character.profileId === 'antunes' ||
     (character.name?.trim().toLowerCase() === 'geraldo' &&
       character.playerName?.trim().toLowerCase() === 'antunes')
   const attacks = (character.attacks ?? []).filter((attack) => !isLegacySpellAttackEntry(attack))
+  const existingChoices = { ...(character.classFeatures?.choices ?? {}) }
+
+  // Sync legacy fightingStyle scalar into choices if present
+  const rawFightingStyle =
+    existingChoices.fightingStyle?.[0] ?? character.classFeatures?.fightingStyle ?? ''
+  const normalizedStyle = normalizeFightingStyleId(rawFightingStyle)
+  if (normalizedStyle) {
+    existingChoices.fightingStyle = [normalizedStyle]
+  }
 
   return {
     ...createEmptyCharacter(),
     ...character,
     class: character.class || classLabel,
+    // Prefer profile subclass label so mangled cloud/free-text never sticks
+    subclass: subclassLabel?.trim() || character.subclass?.trim() || '',
     attacks,
     spellAttackBonus: character.spellAttackBonus || (isGeraldo ? '+7' : ''),
     spellSaveDC: character.spellSaveDC || (isGeraldo ? '15' : ''),
@@ -220,6 +235,8 @@ export function mergeCharacterDefaults(
     classFeatures: {
       ...defaultClassFeatures(characterClass),
       ...character.classFeatures,
+      ...(normalizedStyle ? { fightingStyle: normalizedStyle } : {}),
+      choices: existingChoices,
     },
   }
 }

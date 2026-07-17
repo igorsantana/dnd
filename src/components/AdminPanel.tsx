@@ -23,7 +23,27 @@ function normalizeCharacter(character: Character): Character {
     )
 
   if (!profile) return character
-  return mergeCharacterDefaults(character, profile.characterClass, profile.classLabel)
+  return mergeCharacterDefaults(
+    character,
+    profile.characterClass,
+    profile.classLabel,
+    profile.subclassLabel,
+  )
+}
+
+function needsCloudMigration(source: Character, normalized: Character): boolean {
+  if ((!source.spellAttackBonus && Boolean(normalized.spellAttackBonus)) ||
+    (!source.spellSaveDC && Boolean(normalized.spellSaveDC)) ||
+    (source.attacks?.length ?? 0) !== normalized.attacks.length) {
+    return true
+  }
+  if (source.subclass !== normalized.subclass) return true
+  const sourceStyle = source.classFeatures?.fightingStyle ?? ''
+  const nextStyle = normalized.classFeatures?.fightingStyle ?? ''
+  if (sourceStyle !== nextStyle) return true
+  const sourceChoices = JSON.stringify(source.classFeatures?.choices ?? {})
+  const nextChoices = JSON.stringify(normalized.classFeatures?.choices ?? {})
+  return sourceChoices !== nextChoices
 }
 
 function normalizeCharacters(characters: Character[]): Character[] {
@@ -50,18 +70,14 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
       setSelected(updated ?? null)
     }
 
-    // Persist migrated spellcasting fields for characters still using the legacy attack row.
+    // Persist migrated spellcasting, subclass labels, and feature choices.
     await Promise.all(
       merged.map(async (character) => {
         const source = remote.find(
           (entry) => entry.id === character.id || entry.profileId === character.profileId,
         )
         if (!source) return
-        const needsMigration =
-          (!source.spellAttackBonus && Boolean(character.spellAttackBonus)) ||
-          (!source.spellSaveDC && Boolean(character.spellSaveDC)) ||
-          (source.attacks?.length ?? 0) !== character.attacks.length
-        if (needsMigration) {
+        if (needsCloudMigration(source, character)) {
           await pushCharacterToCloud(character)
         }
       }),
