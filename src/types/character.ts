@@ -186,6 +186,14 @@ export function createEmptyCharacter(): Character {
   }
 }
 
+function isLegacySpellAttackEntry(attack: Attack): boolean {
+  const name = attack.name.trim().replace(/\s+/g, ' ').toUpperCase()
+  return (
+    name.includes('SPELL ATTACK') &&
+    (name.includes('SAVE DC') || name.includes('SPELL SAVE'))
+  )
+}
+
 export function mergeCharacterDefaults(
   character: Character,
   characterClass: CharacterClass,
@@ -195,13 +203,7 @@ export function mergeCharacterDefaults(
     character.profileId === 'antunes' ||
     (character.name?.trim().toLowerCase() === 'geraldo' &&
       character.playerName?.trim().toLowerCase() === 'antunes')
-  const attacks = isGeraldo
-    ? (character.attacks ?? []).filter(
-        (attack) =>
-          attack.name.trim().replace(/\s+/g, ' ').toUpperCase() !==
-          'SPELL ATTACK +7 SAVE DC 15',
-      )
-    : (character.attacks ?? [])
+  const attacks = (character.attacks ?? []).filter((attack) => !isLegacySpellAttackEntry(attack))
 
   return {
     ...createEmptyCharacter(),

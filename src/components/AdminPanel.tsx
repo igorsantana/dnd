@@ -1,15 +1,39 @@
 import { useEffect, useState } from 'react'
 import type { Character } from '../types/character'
+import { mergeCharacterDefaults } from '../types/character'
 import { downloadJson, loadAllCharacters } from '../lib/storage'
-import { fetchCharactersFromCloud, mergeCharacterLists } from '../lib/remote-storage'
+import {
+  fetchCharactersFromCloud,
+  mergeCharacterLists,
+  pushCharacterToCloud,
+} from '../lib/remote-storage'
 import { clearSession } from '../lib/auth'
 import { pt } from '../i18n/pt'
-import { getProfileById } from '../data/profiles'
+import { getProfileById, PLAYER_PROFILES } from '../data/profiles'
 import { PrimaryButton, SectionTitle } from './ui'
 import { CharacterSummary } from './CharacterSummary'
 
+function normalizeCharacter(character: Character): Character {
+  const profile =
+    (character.profileId ? getProfileById(character.profileId) : undefined) ??
+    PLAYER_PROFILES.find(
+      (entry) =>
+        entry.characterName.toLowerCase() === character.name.trim().toLowerCase() &&
+        entry.playerName.toLowerCase() === character.playerName.trim().toLowerCase(),
+    )
+
+  if (!profile) return character
+  return mergeCharacterDefaults(character, profile.characterClass, profile.classLabel)
+}
+
+function normalizeCharacters(characters: Character[]): Character[] {
+  return characters.map(normalizeCharacter)
+}
+
 export function AdminPanel({ onLogout }: { onLogout: () => void }) {
-  const [characters, setCharacters] = useState<Character[]>(loadAllCharacters)
+  const [characters, setCharacters] = useState<Character[]>(() =>
+    normalizeCharacters(loadAllCharacters()),
+  )
   const [selected, setSelected] = useState<Character | null>(null)
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'loading' | 'ok' | 'offline'>('idle')
   const t = pt.admin
@@ -18,13 +42,30 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
     setCloudStatus('loading')
     const { characters: remote, available } = await fetchCharactersFromCloud()
     const local = loadAllCharacters()
-    const merged = mergeCharacterLists(local, remote)
+    const merged = normalizeCharacters(mergeCharacterLists(local, remote))
     setCharacters(merged)
     setCloudStatus(available ? 'ok' : 'offline')
     if (selected) {
       const updated = merged.find((c) => c.id === selected.id || c.profileId === selected.profileId)
       setSelected(updated ?? null)
     }
+
+    // Persist migrated spellcasting fields for characters still using the legacy attack row.
+    await Promise.all(
+      merged.map(async (character) => {
+        const source = remote.find(
+          (entry) => entry.id === character.id || entry.profileId === character.profileId,
+        )
+        if (!source) return
+        const needsMigration =
+          (!source.spellAttackBonus && Boolean(character.spellAttackBonus)) ||
+          (!source.spellSaveDC && Boolean(character.spellSaveDC)) ||
+          (source.attacks?.length ?? 0) !== character.attacks.length
+        if (needsMigration) {
+          await pushCharacterToCloud(character)
+        }
+      }),
+    )
   }
 
   useEffect(() => {
