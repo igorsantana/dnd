@@ -90,9 +90,9 @@ export function ChoicePicker({
               {entry.label}
             </button>
           ))}
-          {filtered.length === 0 && (
+          {trimmedQuery && filtered.length === 0 && (
             <p className="text-galaxy-color spell-picker-hint">
-              {trimmedQuery ? t.noChoicesFound : t.searchChoicesHint ?? t.searchChoices}
+              {t.noChoicesFound}
             </p>
           )}
         </div>

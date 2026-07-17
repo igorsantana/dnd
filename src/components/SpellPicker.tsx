@@ -111,9 +111,9 @@ export function SpellPicker({
                 </button>
               )
             })}
-            {options.length === 0 && (
+            {query.trim() && options.length === 0 && (
               <p className="text-galaxy-color spell-picker-hint">
-                {query.trim() ? t.noSpellsFound : cantripsOnly ? t.searchCantripsHint : t.searchSpellsHint}
+                {t.noSpellsFound}
               </p>
             )}
           </div>

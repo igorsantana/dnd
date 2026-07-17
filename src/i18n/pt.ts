@@ -78,8 +78,6 @@ export const pt = {
     searchSpells: 'Buscar magias...',
     searchCantrips: 'Buscar truques...',
     noSpellsFound: 'Nenhuma magia encontrada.',
-    searchSpellsHint: 'Digite para buscar e adicionar magias.',
-    searchCantripsHint: 'Digite para buscar e adicionar truques.',
     spellName: 'Nome da magia',
     spellLevel: 'Nível',
     spellSchool: 'Escola',
@@ -114,7 +112,6 @@ export const pt = {
   },
   features: {
     searchChoices: 'Buscar opções...',
-    searchChoicesHint: 'Digite para buscar e adicionar opções.',
     noChoicesFound: 'Nenhuma opção encontrada.',
     bardicInspiration: 'Inspiração Bárdica',
     bardicInspirationDetail: 'Usos = modificador de Carisma (mín. 1) · recupera no descanso curto (Fonte de Inspiração)',
