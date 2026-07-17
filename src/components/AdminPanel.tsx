@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react'
 import type { Character } from '../types/character'
 import { mergeCharacterDefaults } from '../types/character'
-import { downloadJson, loadAllCharacters } from '../lib/storage'
+import { downloadJson, loadAllCharacters, saveCharacter } from '../lib/storage'
 import {
   fetchCharactersFromCloud,
   mergeCharacterLists,
   pushCharacterToCloud,
 } from '../lib/remote-storage'
 import { clearSession } from '../lib/auth'
+import { applyLevelUpToCharacter, buildLevelUpPreview } from '../lib/level-up'
+import { saveLevelUpEvent } from '../lib/level-up-store'
+import { parseLevel } from '../lib/class-features'
 import { pt } from '../i18n/pt'
 import { getProfileById, PLAYER_PROFILES } from '../data/profiles'
 import { PrimaryButton, SectionTitle } from './ui'
 import { CharacterSummary } from './CharacterSummary'
+import { ConfirmModal } from './ConfirmModal'
 
 function normalizeCharacter(character: Character): Character {
   const profile =
@@ -64,7 +68,55 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
   )
   const [selected, setSelected] = useState<Character | null>(null)
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'loading' | 'ok' | 'offline'>('idle')
+  const [confirmLevelUp, setConfirmLevelUp] = useState(false)
+  const [levelUpMessage, setLevelUpMessage] = useState<string | null>(null)
   const t = pt.admin
+  const lt = pt.levelUp
+  const cloudUnavailableText = import.meta.env.DEV ? t.cloudLocal : t.cloudOffline
+
+  const sharedLevel = characters.length
+    ? Math.min(...characters.map((c) => parseLevel(c.level)))
+    : 5
+  const nextLevel = Math.min(20, sharedLevel + 1)
+
+  function handleConfirmLevelUp() {
+    const previews = characters.map((character) => {
+      const profile =
+        (character.profileId ? getProfileById(character.profileId) : undefined) ??
+        PLAYER_PROFILES.find(
+          (entry) =>
+            entry.characterName.toLowerCase() === character.name.trim().toLowerCase() &&
+            entry.playerName.toLowerCase() === character.playerName.trim().toLowerCase(),
+        )
+      const characterClass = profile?.characterClass ?? 'fighter'
+      const subclassId = profile?.subclassId
+      return buildLevelUpPreview(character, characterClass, subclassId)
+    })
+
+    const updated = characters.map((character) => {
+      const profile =
+        (character.profileId ? getProfileById(character.profileId) : undefined) ??
+        PLAYER_PROFILES.find(
+          (entry) =>
+            entry.characterName.toLowerCase() === character.name.trim().toLowerCase() &&
+            entry.playerName.toLowerCase() === character.playerName.trim().toLowerCase(),
+        )
+      const characterClass = profile?.characterClass ?? 'fighter'
+      const next = applyLevelUpToCharacter(character, characterClass)
+      return saveCharacter(next)
+    })
+
+    saveLevelUpEvent(previews)
+    setCharacters(normalizeCharacters(updated))
+    if (selected) {
+      const refreshed = updated.find(
+        (c) => c.id === selected.id || c.profileId === selected.profileId,
+      )
+      setSelected(refreshed ? normalizeCharacter(refreshed) : null)
+    }
+    setConfirmLevelUp(false)
+    setLevelUpMessage(lt.done(updated.length))
+  }
 
   async function syncFromCloud() {
     setCloudStatus('loading')
@@ -117,7 +169,11 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
         <div className="admin-sidebar-top">
           <h1 className="snes-container-title has-galaxy-underline admin-title">{t.title}</h1>
           <p className="text-nature-color admin-cloud-status">
-            {cloudStatus === 'ok' ? t.cloudSynced : cloudStatus === 'offline' ? t.cloudOffline : t.cloudHint}
+            {cloudStatus === 'ok'
+              ? t.cloudSynced
+              : cloudStatus === 'offline'
+                ? cloudUnavailableText
+                : t.cloudHint}
           </p>
           <button
             type="button"
@@ -127,6 +183,20 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
           >
             {cloudStatus === 'loading' ? t.cloudLoading : t.cloudRefresh}
           </button>
+          <PrimaryButton
+            type="button"
+            color="ember"
+            className="admin-level-up-btn"
+            disabled={characters.length === 0}
+            onClick={() => setConfirmLevelUp(true)}
+          >
+            {t.levelUpAll}
+          </PrimaryButton>
+          {levelUpMessage && (
+            <p className="text-nature-color admin-level-up-msg" role="status">
+              {levelUpMessage}
+            </p>
+          )}
         </div>
 
         <section className="admin-roster">
@@ -182,6 +252,17 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
           </div>
         )}
       </main>
+
+      {confirmLevelUp && (
+        <ConfirmModal
+          title={lt.confirmTitle}
+          body={lt.confirmBody(sharedLevel, nextLevel, characters.length)}
+          confirmLabel={lt.confirm}
+          cancelLabel={lt.cancel}
+          onConfirm={handleConfirmLevelUp}
+          onCancel={() => setConfirmLevelUp(false)}
+        />
+      )}
     </div>
   )
 }

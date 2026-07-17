@@ -32,12 +32,13 @@ export function ChoicePicker({
 
   const filtered = useMemo(() => {
     if (!trimmedQuery) return []
-    return options.filter(
-      (o) =>
-        !selectedSet.has(o.id) &&
-        (o.label.toLowerCase().includes(trimmedQuery) ||
-          o.id.toLowerCase().includes(trimmedQuery)),
-    )
+    return options.filter((o) => {
+      if (selectedSet.has(o.id)) return false
+      return (
+        o.label.toLowerCase().includes(trimmedQuery) ||
+        o.id.toLowerCase().includes(trimmedQuery)
+      )
+    })
   }, [options, selectedSet, trimmedQuery])
 
   function add(id: string) {
@@ -64,39 +65,38 @@ export function ChoicePicker({
             ({selected.length}/{maxChoices})
           </span>
         </label>
-        <div className="snes-input">
-          <input
-            id={searchId}
-            type="search"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={searchPlaceholder ?? t.searchChoices}
-            disabled={atCap}
-          />
-        </div>
-      </div>
-
-      <div className="spell-picker-options">
-        {filtered.map((entry) => (
-          <button
-            key={entry.id}
-            type="button"
-            onClick={() => add(entry.id)}
-            className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
-          >
-            {entry.label}
-          </button>
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-galaxy-color spell-picker-hint">
-            {trimmedQuery
-              ? t.noChoicesFound
-              : atCap
-                ? `${selected.length}/${maxChoices}`
-                : t.searchChoicesHint ?? t.searchChoices}
-          </p>
+        {!atCap && (
+          <div className="snes-input">
+            <input
+              id={searchId}
+              type="search"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={searchPlaceholder ?? t.searchChoices}
+            />
+          </div>
         )}
       </div>
+
+      {!atCap && (
+        <div className="spell-picker-options">
+          {filtered.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              onClick={() => add(entry.id)}
+              className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
+            >
+              {entry.label}
+            </button>
+          ))}
+          {filtered.length === 0 && (
+            <p className="text-galaxy-color spell-picker-hint">
+              {trimmedQuery ? t.noChoicesFound : t.searchChoicesHint ?? t.searchChoices}
+            </p>
+          )}
+        </div>
+      )}
 
       {selectedOptions.length > 0 && (
         <ul className="spell-picker-selected">

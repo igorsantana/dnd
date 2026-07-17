@@ -1,4 +1,5 @@
 import type { CharacterClass, SubclassId } from '../data/profiles'
+import { CLASS_FEATURE_CATALOG } from '../data/class-features'
 import { getSpellById } from '../lib/spells'
 import { normalizeFeatureChoices, normalizeFightingStyleId } from '../lib/class-features'
 
@@ -267,6 +268,10 @@ export function mergeCharacterDefaults(
     subclassId,
     character.level || '5',
     existingChoices,
+    {
+      favoredEnemy: character.classFeatures?.favoredEnemy,
+      favoredTerrain: character.classFeatures?.favoredTerrain,
+    },
   )
 
   const spells = (character.spells ?? []).map((spell) =>
@@ -277,6 +282,22 @@ export function mergeCharacterDefaults(
       notes: repairCorruptedText(spell.notes),
     }),
   )
+
+  const favoredEnemyLabel =
+    normalizedChoices.favoredEnemy
+      ?.map((id) => {
+        const feature = CLASS_FEATURE_CATALOG.find((f) => f.choiceKey === 'favoredEnemy')
+        return feature?.options?.find((o) => o.id === id)?.label ?? id
+      })
+      .join(', ') ?? character.classFeatures?.favoredEnemy
+
+  const favoredTerrainLabel =
+    normalizedChoices.favoredTerrain
+      ?.map((id) => {
+        const feature = CLASS_FEATURE_CATALOG.find((f) => f.choiceKey === 'favoredTerrain')
+        return feature?.options?.find((o) => o.id === id)?.label ?? id
+      })
+      .join(', ') ?? character.classFeatures?.favoredTerrain
 
   return {
     ...createEmptyCharacter(),
@@ -299,6 +320,8 @@ export function mergeCharacterDefaults(
       ...defaultClassFeatures(characterClass),
       ...character.classFeatures,
       ...(normalizedStyle ? { fightingStyle: normalizedStyle } : {}),
+      ...(favoredEnemyLabel ? { favoredEnemy: favoredEnemyLabel } : {}),
+      ...(favoredTerrainLabel ? { favoredTerrain: favoredTerrainLabel } : {}),
       choices: normalizedChoices,
     },
   }

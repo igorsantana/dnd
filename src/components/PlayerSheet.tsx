@@ -14,6 +14,7 @@ import { pt } from '../i18n/pt'
 import { ProfilePicker } from './ProfilePicker'
 import { ClassFeatureSection, SpellcastingSections } from './ClassSections'
 import { SaveCelebration } from './SaveCelebration'
+import { LevelUpNoticeModal } from './LevelUpNoticeModal'
 import {
   SectionTitle,
   Field,
@@ -28,6 +29,7 @@ import {
 import { AvatarFrame } from './AvatarFrame'
 import { SnesAccentProvider } from '../contexts/SnesAccentContext'
 import { profileToSnesColor, snesTextClass } from '../lib/snes'
+import { getActiveNoticeForProfile } from '../lib/level-up-store'
 
 const ABILITY_LABELS: { key: keyof Character['abilities']; label: string }[] = [
   { key: 'strength', label: 'FOR' },
@@ -87,10 +89,15 @@ export function PlayerSheet() {
   const [cloudHint, setCloudHint] = useState<string | null>(null)
   const [editingAttackId, setEditingAttackId] = useState<string | null>(null)
   const [editingMagicItemId, setEditingMagicItemId] = useState<string | null>(null)
+  const [editingInventoryItemId, setEditingInventoryItemId] = useState<string | null>(null)
+  const [levelUpNotice, setLevelUpNotice] = useState<ReturnType<typeof getActiveNoticeForProfile>>(null)
   const loadGeneration = useRef(0)
 
   const profile = profileId ? getProfileById(profileId) : undefined
   const t = pt.sheet
+  const cloudUnavailableText = import.meta.env.DEV
+    ? pt.admin.cloudLocal
+    : pt.admin.cloudOffline
   const snesColor = profile ? profileToSnesColor(profile.id) : 'galaxy'
 
   async function loadProfile(id: string) {
@@ -119,9 +126,10 @@ export function PlayerSheet() {
 
     cacheCharacter(resolved)
     setCharacter(resolved)
+    setLevelUpNotice(getActiveNoticeForProfile(id))
 
     if (!cloudResult.available) {
-      setCloudHint(pt.admin.cloudOffline)
+      setCloudHint(cloudUnavailableText)
     } else {
       setCloudHint(null)
     }
@@ -217,6 +225,7 @@ export function PlayerSheet() {
       notes: '',
     }
     update('inventory', [...character.inventory, item])
+    setEditingInventoryItemId(item.id)
   }
 
   function updateInventoryItem(id: string, patch: Partial<InventoryItem>) {
@@ -228,6 +237,7 @@ export function PlayerSheet() {
 
   function removeInventoryItem(id: string) {
     update('inventory', character.inventory.filter((i) => i.id !== id))
+    if (editingInventoryItemId === id) setEditingInventoryItemId(null)
   }
 
   async function handleSave() {
@@ -245,7 +255,7 @@ export function PlayerSheet() {
       setCharacter(synced)
       setCloudHint(null)
     } else {
-      setCloudHint(pt.admin.cloudOffline)
+      setCloudHint(cloudUnavailableText)
     }
     setShowCelebration(true)
   }
@@ -284,6 +294,15 @@ export function PlayerSheet() {
           <SaveCelebration
             accentColor={profile.accentColor}
             onDone={() => setShowCelebration(false)}
+          />
+        )}
+        {levelUpNotice && (
+          <LevelUpNoticeModal
+            characterName={levelUpNotice.characterName || profile.characterName}
+            fromLevel={levelUpNotice.fromLevel}
+            toLevel={levelUpNotice.toLevel}
+            additions={levelUpNotice.additions}
+            onContinue={() => setLevelUpNotice(null)}
           />
         )}
 
@@ -450,11 +469,59 @@ export function PlayerSheet() {
                   <SectionTitle>{t.inventory}</SectionTitle>
                   <PixelScrollList count={character.inventory.length}>
                     {character.inventory.map((item) => (
-                      <SheetRow key={item.id} onRemove={() => removeInventoryItem(item.id)}>
-                        <Field label={t.fields.item} value={item.name} onChange={(v) => updateInventoryItem(item.id, { name: v })} className="col-span-2" />
-                        <Field label={t.fields.quantity} value={item.quantity} onChange={(v) => updateInventoryItem(item.id, { quantity: v })} type="number" />
-                        <Field label={t.fields.notes} value={item.notes} onChange={(v) => updateInventoryItem(item.id, { notes: v })} className="col-span-2" />
-                      </SheetRow>
+                      editingInventoryItemId === item.id ? (
+                        <div key={item.id} className="compact-edit-panel">
+                          <div className="sheet-row sheet-row-stack">
+                            <div className="sheet-row-fields sheet-row-fields-wide">
+                              <Field
+                                label={t.fields.item}
+                                value={item.name}
+                                onChange={(v) => updateInventoryItem(item.id, { name: v })}
+                                className="col-span-2"
+                              />
+                              <Field
+                                label={t.fields.quantity}
+                                value={item.quantity}
+                                onChange={(v) => updateInventoryItem(item.id, { quantity: v })}
+                                type="number"
+                              />
+                              <Field
+                                label={t.fields.notes}
+                                value={item.notes}
+                                onChange={(v) => updateInventoryItem(item.id, { notes: v })}
+                                className="col-span-2"
+                              />
+                            </div>
+                            <div className="sheet-row-action">
+                              <button
+                                type="button"
+                                onClick={() => removeInventoryItem(item.id)}
+                                className="snes-link text-plumber-color"
+                                title="Remover"
+                              >
+                                [x]
+                              </button>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="snes-link text-nature-color compact-done"
+                            onClick={() => setEditingInventoryItemId(null)}
+                          >
+                            [✓] Concluir
+                          </button>
+                        </div>
+                      ) : (
+                        <CompactSheetItem
+                          key={item.id}
+                          title={item.name}
+                          meta={[item.quantity && `×${item.quantity}`, item.notes]
+                            .filter(Boolean)
+                            .join(' · ')}
+                          onEdit={() => setEditingInventoryItemId(item.id)}
+                          onRemove={() => removeInventoryItem(item.id)}
+                        />
+                      )
                     ))}
                   </PixelScrollList>
                   <AddButton onClick={addInventoryItem} label={t.addItem} />

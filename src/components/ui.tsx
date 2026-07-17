@@ -1,4 +1,4 @@
-import { useId } from 'react'
+import { useId, useState } from 'react'
 import { useSnesAccent } from '../contexts/SnesAccentContext'
 import {
   snesButtonClass,
@@ -188,21 +188,25 @@ export function PixelScrollList({
   count,
   children,
   className,
+  overflowAfter = 5,
 }: {
   count: number
   children: React.ReactNode
   className?: string
+  overflowAfter?: number
 }) {
+  const hasOverflow = count > overflowAfter
+
   return (
-    <div className={`pixel-scroll-frame ${count > 5 ? 'has-overflow' : ''} ${className ?? ''}`}>
+    <div className={`pixel-scroll-frame ${hasOverflow ? 'has-overflow' : ''} ${className ?? ''}`}>
       <div
         className="pixel-scroll-list"
-        tabIndex={count > 5 ? 0 : undefined}
-        aria-label={count > 5 ? 'Lista rolável' : undefined}
+        tabIndex={hasOverflow ? 0 : undefined}
+        aria-label={hasOverflow ? 'Lista rolável' : undefined}
       >
         {children}
       </div>
-      {count > 5 && <span className="pixel-scroll-cue">▼</span>}
+      {hasOverflow && <span className="pixel-scroll-cue">▼</span>}
     </div>
   )
 }
@@ -228,6 +232,86 @@ export function CompactSheetItem({
         {detail && <span className="compact-sheet-detail">{detail}</span>}
       </button>
       <RemoveButton onClick={onRemove} />
+    </div>
+  )
+}
+
+interface EditableValueProps {
+  label: string
+  value: string
+  onChange: (value: string) => void
+  placeholder?: string
+  type?: string
+  className?: string
+}
+
+/** Read-only display that turns into an input when clicked. */
+export function EditableValue({
+  label,
+  value,
+  onChange,
+  placeholder,
+  type = 'text',
+  className,
+}: EditableValueProps) {
+  const [editing, setEditing] = useState(false)
+  const id = useId()
+
+  if (editing) {
+    return (
+      <div className={`sheet-field ${className ?? ''}`}>
+        <label className="sheet-label" htmlFor={id}>
+          {label}
+        </label>
+        <div className="snes-input">
+          <input
+            id={id}
+            type={type}
+            value={value}
+            autoFocus
+            placeholder={placeholder}
+            onChange={(e) => onChange(e.target.value)}
+            onBlur={() => setEditing(false)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === 'Escape') {
+                e.currentTarget.blur()
+              }
+            }}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <button
+      type="button"
+      className={`editable-value ${className ?? ''}`}
+      onClick={() => setEditing(true)}
+    >
+      <span className="sheet-label">{label}</span>
+      <span className="editable-value-text">{value.trim() || '—'}</span>
+    </button>
+  )
+}
+
+/** Read-only stat box matching EditableValue / spellcasting fields. */
+export function StatDisplay({
+  label,
+  value,
+  detail,
+  className,
+}: {
+  label: string
+  value: string
+  detail?: string
+  className?: string
+}) {
+  return (
+    <div className={`stat-display ${className ?? ''}`}>
+      <span className="sheet-label">{label}</span>
+      <span className="editable-value-text">{value.trim() || '—'}</span>
+      {detail && <p className="text-galaxy-color feature-detail">{detail}</p>}
     </div>
   )
 }

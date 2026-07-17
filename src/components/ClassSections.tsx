@@ -2,11 +2,20 @@ import type { CharacterClass, SubclassId } from '../data/profiles'
 import type { Character, ClassFeatures } from '../types/character'
 import type { ClassFeatureDef } from '../data/class-features'
 import { isCasterClass } from '../lib/classes'
-import { getAttacksPerTurn, resolveFeatures } from '../lib/class-features'
+import {
+  bardicInspirationDie,
+  bardicInspirationUses,
+  effectiveMaxChoices,
+  getAttacksPerTurn,
+  parseLevel,
+  resolveFeatures,
+  songOfRestDie,
+} from '../lib/class-features'
+import { proficiencyBonusForLevel } from '../data/spell-slots'
 import { pt } from '../i18n/pt'
 import { SpellPicker } from './SpellPicker'
 import { ChoicePicker } from './ChoicePicker'
-import { SectionTitle, Field, TextArea, CheckboxField } from './ui'
+import { SectionTitle, Field, TextArea, CheckboxField, EditableValue, StatDisplay } from './ui'
 
 interface ClassSectionsSharedProps {
   characterClass: CharacterClass
@@ -52,28 +61,33 @@ export function SpellcastingSections({
   const cantrips = character.spells.filter((s) => s.isCantrip)
   const leveledSpells = character.spells.filter((s) => !s.isCantrip)
 
-  function updateSlot(level: string, field: 'total' | 'used', value: string) {
+  function updateSlotTotal(level: string, value: string) {
     onUpdateSpellSlots({
       ...character.spellSlots,
       [level]: {
         ...character.spellSlots[level],
-        [field]: value,
+        total: value,
+        used: character.spellSlots[level]?.used ?? '0',
       },
     })
   }
+
+  const slotEntries = Object.entries(character.spellSlots).sort(
+    ([a], [b]) => Number(a) - Number(b),
+  )
 
   return (
     <>
       <div className="sheet-section">
         <SectionTitle>{t.spellcasting}</SectionTitle>
         <div className="field-grid field-grid-2">
-          <Field
+          <EditableValue
             label={t.spellAttackBonus}
             value={character.spellAttackBonus}
             onChange={(value) => onUpdateSpellcasting('spellAttackBonus', value)}
             placeholder="+7"
           />
-          <Field
+          <EditableValue
             label={t.spellSaveDC}
             value={character.spellSaveDC}
             onChange={(value) => onUpdateSpellcasting('spellSaveDC', value)}
@@ -86,23 +100,14 @@ export function SpellcastingSections({
       <div className="sheet-section">
         <SectionTitle>{t.spellSlots}</SectionTitle>
         <div className="spell-slots-row">
-          {Object.entries(character.spellSlots).map(([level, slot]) => (
+          {slotEntries.map(([level, slot]) => (
             <div key={level} className="spell-slot-group">
-              <p className="sheet-label">{t.slotLevel(Number(level))}</p>
-              <div className="field-grid field-grid-2">
-                <Field
-                  label={t.slotsTotal}
-                  value={slot.total}
-                  onChange={(v) => updateSlot(level, 'total', v)}
-                  type="number"
-                />
-                <Field
-                  label={t.slotsUsed}
-                  value={slot.used}
-                  onChange={(v) => updateSlot(level, 'used', v)}
-                  type="number"
-                />
-              </div>
+              <EditableValue
+                label={t.slotLevel(Number(level))}
+                value={slot.total}
+                onChange={(v) => updateSlotTotal(level, v)}
+                type="number"
+              />
             </div>
           ))}
         </div>
@@ -162,24 +167,114 @@ export function ClassFeatureSection({
       ...character.classFeatures,
       choices: updatedChoices,
     }
-    // Keep legacy fightingStyle scalar in sync for older summary code
     if (choiceKey === 'fightingStyle') {
       patch.fightingStyle = next[0] ?? ''
+    }
+    if (choiceKey === 'favoredEnemy') {
+      patch.favoredEnemy = next.join(', ')
+    }
+    if (choiceKey === 'favoredTerrain') {
+      patch.favoredTerrain = next.join(', ')
     }
     onUpdateClassFeatures(patch)
   }
 
-  const infoFeatures = features.filter(
-    (f) => f.kind === 'info' && f.id !== 'ritualCasting',
-  )
-  const valueFeatures = features.filter((f) => f.kind === 'value')
-  const choiceFeatures = features.filter((f) => f.kind === 'choice')
+  function renderFeature(feature: ClassFeatureDef) {
+    if (feature.id === 'bardicInspiration') {
+      const die = bardicInspirationDie(character.level)
+      const uses = bardicInspirationUses(character.abilities.charisma)
+      return (
+        <div key={feature.id} className="feature-block">
+          <StatDisplay
+            label={featureLabel(feature)}
+            value={`${uses}× ${die}`}
+            detail={featureDetail(feature)}
+          />
+        </div>
+      )
+    }
+
+    if (feature.id === 'songOfRest') {
+      const die = songOfRestDie(character.level)
+      return (
+        <div key={feature.id} className="feature-block">
+          <StatDisplay
+            label={featureLabel(feature)}
+            value={die}
+            detail={featureDetail(feature)}
+          />
+        </div>
+      )
+    }
+
+    if (feature.id === 'jackOfAllTrades') {
+      const halfProf = Math.floor(Number.parseInt(proficiencyBonusForLevel(parseLevel(character.level)).replace('+', ''), 10) / 2)
+      return (
+        <div key={feature.id} className="feature-block">
+          <StatDisplay
+            label={featureLabel(feature)}
+            value={`+${halfProf}`}
+            detail={featureDetail(feature)}
+          />
+        </div>
+      )
+    }
+
+    if (feature.kind === 'value') {
+      const key = feature.valueKey
+      if (!key || key === 'choices' || key === 'ritualCasting') return null
+      const value = String(character.classFeatures[key] ?? '')
+      return (
+        <div key={feature.id} className="feature-block">
+          <Field
+            label={featureLabel(feature)}
+            value={value}
+            onChange={(v) => updateFeature(key, v)}
+            placeholder={featureDetail(feature)}
+          />
+          {featureDetail(feature) && (
+            <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
+          )}
+        </div>
+      )
+    }
+
+    if (feature.kind === 'info') {
+      if (feature.id === 'ritualCasting') return null
+      return (
+        <div key={feature.id} className="feature-block">
+          <p className="sheet-label">{featureLabel(feature)}</p>
+          {featureDetail(feature) && (
+            <p className="text-galaxy-color feature-detail feature-detail-flush">{featureDetail(feature)}</p>
+          )}
+        </div>
+      )
+    }
+
+    if (feature.kind === 'choice') {
+      if (!feature.choiceKey || !feature.options || !feature.maxChoices) return null
+      return (
+        <div key={feature.id} className="feature-block">
+          <ChoicePicker
+            label={featureLabel(feature)}
+            options={feature.options}
+            selected={choices[feature.choiceKey] ?? []}
+            maxChoices={effectiveMaxChoices(feature, character.level)}
+            onChange={(next) => updateChoices(feature.choiceKey!, next)}
+          />
+          {featureDetail(feature) && (
+            <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
+          )}
+        </div>
+      )
+    }
+
+    return null
+  }
 
   if (
     !showAttacksPerTurn &&
-    infoFeatures.length === 0 &&
-    valueFeatures.length === 0 &&
-    choiceFeatures.length === 0 &&
+    features.length === 0 &&
     characterClass !== 'wizard'
   ) {
     return null
@@ -190,33 +285,15 @@ export function ClassFeatureSection({
       <SectionTitle>{t.classFeatures}</SectionTitle>
 
       {showAttacksPerTurn && (
-        <div className="feature-info-block">
-          <p className="sheet-label">{t.attacksPerTurn}</p>
-          <p className="text-white feature-info-value">{attacksPerTurn}</p>
+        <div className="feature-block">
+          <StatDisplay label={t.attacksPerTurn} value={String(attacksPerTurn)} />
         </div>
       )}
 
-      {valueFeatures.map((feature) => {
-        const key = feature.valueKey
-        if (!key || key === 'choices' || key === 'ritualCasting') return null
-        const value = String(character.classFeatures[key] ?? '')
-        return (
-          <div key={feature.id} className="mt-3">
-            <Field
-              label={featureLabel(feature)}
-              value={value}
-              onChange={(v) => updateFeature(key, v)}
-              placeholder={featureDetail(feature)}
-            />
-            {featureDetail(feature) && (
-              <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
-            )}
-          </div>
-        )
-      })}
+      {features.map((feature) => renderFeature(feature))}
 
       {characterClass === 'wizard' && (
-        <div className="mt-3 field-grid field-grid-2">
+        <div className="feature-block field-grid field-grid-2">
           <CheckboxField
             label={t.ritualCasting}
             checked={character.classFeatures.ritualCasting ?? false}
@@ -230,33 +307,6 @@ export function ClassFeatureSection({
           />
         </div>
       )}
-
-      {infoFeatures.map((feature) => (
-        <div key={feature.id} className="feature-info-block">
-          <p className="text-white feature-info-title">{featureLabel(feature)}</p>
-          {featureDetail(feature) && (
-            <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
-          )}
-        </div>
-      ))}
-
-      {choiceFeatures.map((feature) => {
-        if (!feature.choiceKey || !feature.options || !feature.maxChoices) return null
-        return (
-          <div key={feature.id} className="mt-4">
-            <ChoicePicker
-              label={featureLabel(feature)}
-              options={feature.options}
-              selected={choices[feature.choiceKey] ?? []}
-              maxChoices={feature.maxChoices}
-              onChange={(next) => updateChoices(feature.choiceKey!, next)}
-            />
-            {featureDetail(feature) && (
-              <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>
-            )}
-          </div>
-        )
-      })}
     </div>
   )
 }

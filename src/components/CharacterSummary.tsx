@@ -2,11 +2,16 @@ import type { ReactNode } from 'react'
 import type { Character, ClassFeatures } from '../types/character'
 import { getProfileById, PLAYER_PROFILES, type CharacterClass, type SubclassId } from '../data/profiles'
 import {
+  bardicInspirationDie,
+  bardicInspirationUses,
   choiceLabels,
   getAttacksPerTurn,
+  parseLevel,
   resolveFeatures,
+  songOfRestDie,
 } from '../lib/class-features'
 import type { ClassFeatureDef } from '../data/class-features'
+import { proficiencyBonusForLevel } from '../data/spell-slots'
 import { pt } from '../i18n/pt'
 import { PixelScrollList, SectionTitle } from './ui'
 
@@ -75,6 +80,7 @@ function classFeatureRows(
   characterClass: CharacterClass | undefined,
   subclassId: SubclassId | undefined,
   level: string,
+  charisma?: string,
 ): { label: string; value: string }[] {
   const t = pt.classes
   const rows: { label: string; value: string }[] = []
@@ -117,6 +123,35 @@ function classFeatureRows(
       if (features.ritualCasting) {
         rows.push({ label: featureLabel(feature), value: 'Sim' })
       }
+      continue
+    }
+
+    if (feature.id === 'bardicInspiration') {
+      const die = bardicInspirationDie(level)
+      const uses = bardicInspirationUses(charisma)
+      rows.push({
+        label: featureLabel(feature),
+        value: `${uses}× ${die}`,
+      })
+      continue
+    }
+
+    if (feature.id === 'songOfRest') {
+      rows.push({
+        label: featureLabel(feature),
+        value: songOfRestDie(level),
+      })
+      continue
+    }
+
+    if (feature.id === 'jackOfAllTrades') {
+      const halfProf = Math.floor(
+        Number.parseInt(proficiencyBonusForLevel(parseLevel(level)).replace('+', ''), 10) / 2,
+      )
+      rows.push({
+        label: featureLabel(feature),
+        value: `+${halfProf}`,
+      })
       continue
     }
 
@@ -179,6 +214,7 @@ export function CharacterSummary({ character }: { character: Character }) {
     characterClass,
     subclassId,
     character.level,
+    character.abilities.charisma,
   )
   const slotLevels = Object.keys(character.spellSlots).sort((a, b) => Number(a) - Number(b))
 
@@ -341,12 +377,10 @@ export function CharacterSummary({ character }: { character: Character }) {
             const slot = character.spellSlots[lvl]
             if (!slot || !hasText(slot.total) || slot.total === '0') return null
             return (
-              <div key={lvl} className="admin-summary-slot">
-                <span className="text-galaxy-color">{tc.slotLevel(Number(lvl))}</span>
-                <span className="text-white">
-                  {Number(slot.total) - Number(slot.used || 0)} / {slot.total}
-                </span>
-              </div>
+            <div key={lvl} className="admin-summary-slot">
+              <span className="text-galaxy-color">{tc.slotLevel(Number(lvl))}</span>
+              <span className="text-white">{slot.total}</span>
+            </div>
             )
           })}
         </div>

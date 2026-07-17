@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import Particles, { ParticlesProvider } from '@tsparticles/react'
 import type { Engine, ISourceOptions } from '@tsparticles/engine'
 import { loadSlim } from '@tsparticles/slim'
+import { PowerGlitch } from 'powerglitch'
 import { authenticate, setSessionRole, type AuthRole } from '../lib/auth'
 import { pt } from '../i18n/pt'
 import { PrimaryButton } from './ui'
@@ -76,6 +77,7 @@ function LoginMinotaur() {
 function IdleLogo() {
   const stageRef = useRef<HTMLDivElement>(null)
   const logoRef = useRef<HTMLDivElement>(null)
+  const glitchRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const stage = stageRef.current
@@ -143,10 +145,58 @@ function IdleLogo() {
     }
   }, [])
 
+  useEffect(() => {
+    const layerContainer = glitchRef.current
+    if (!layerContainer || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return
+    }
+
+    const controls = PowerGlitch.glitch(layerContainer, {
+      createContainers: false,
+      playMode: 'always',
+      hideOverflow: false,
+      timing: {
+        duration: 3600,
+        iterations: Infinity,
+        easing: 'steps(18, end)',
+      },
+      glitchTimeSpan: {
+        start: 0.68,
+        end: 0.9,
+      },
+      shake: {
+        velocity: 12,
+        amplitudeX: 0.035,
+        amplitudeY: 0.018,
+      },
+      slice: {
+        count: 5,
+        velocity: 16,
+        minHeight: 0.03,
+        maxHeight: 0.22,
+        hueRotate: true,
+      },
+      pulse: {
+        scale: 1.045,
+      },
+    })
+
+    return () => {
+      controls.stopGlitch()
+      while (layerContainer.children.length > 1) {
+        layerContainer.lastElementChild?.remove()
+      }
+    }
+  }, [])
+
   return (
     <div ref={stageRef} className="login-idle-stage" aria-hidden="true">
       <div ref={logoRef} className="login-idle-logo">
-        <img src="/sprites/high-priest-pipe.png" alt="" />
+        <div ref={glitchRef} className="login-idle-logo-glitch">
+          <div className="login-idle-logo-art">
+            <img src="/sprites/high-priest-pipe.png" alt="" />
+          </div>
+        </div>
       </div>
     </div>
   )
