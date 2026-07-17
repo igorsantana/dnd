@@ -649,12 +649,81 @@
 
 /* Login screen */
 .login-page {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   padding: 2.5rem 1.5rem;
 }
 
 .login-page-inner {
+  position: relative;
+  z-index: 3;
   width: 100%;
-  max-width: 36rem;
+  max-width: 48rem;
+}
+
+.login-idle-stage {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.login-idle-logo {
+  --idle-logo-hue: 0deg;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: clamp(110px, 17vw, 210px);
+  aspect-ratio: 1;
+  will-change: transform, filter;
+  filter:
+    hue-rotate(var(--idle-logo-hue))
+    saturate(1.75)
+    contrast(1.12)
+    drop-shadow(5px 5px 0 rgb(0 0 0 / 80%))
+    drop-shadow(-3px -3px 0 rgb(255 0 153 / 35%));
+  transition: filter 120ms steps(3, end);
+}
+
+.login-idle-logo::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background: conic-gradient(
+    from 0deg,
+    #ff005d,
+    #ffef00,
+    #00ff9d,
+    #00b7ff,
+    #8b00ff,
+    #ff005d
+  );
+  opacity: 0.28;
+  mix-blend-mode: color;
+  -webkit-mask: url("/sprites/high-priest-pipe.png") center / contain no-repeat;
+  mask: url("/sprites/high-priest-pipe.png") center / contain no-repeat;
+  animation: login-logo-color-cycle 2.2s steps(12, end) infinite;
+}
+
+.login-idle-logo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  image-rendering: pixelated;
+  animation: login-logo-pulse 1.7s steps(4, end) infinite;
+}
+
+.login-idle-logo.did-bounce {
+  animation: login-logo-hit 180ms steps(2, end);
+}
+
+.login-idle-logo.is-reduced-motion {
+  top: 1rem;
+  left: 1rem;
+  transform: none;
 }
 
 .login-page-header {
@@ -664,17 +733,124 @@
 
 .login-page-header .snes-container-title {
   margin-bottom: 1.5rem;
+  font-size: clamp(17px, 2.7vw, 25px);
+  line-height: 1.7;
 }
 
 .login-page-subtitle {
-  font-size: 10px;
+  font-size: 12px;
   line-height: 2;
-  max-width: 28rem;
+  max-width: 38rem;
   margin-inline: auto;
 }
 
+.login-danger {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 1rem auto 0;
+  color: #ff334f;
+  font-size: 11px;
+  line-height: 1.7;
+  text-shadow: 2px 2px 0 #45000a;
+  animation: login-danger-blink 0.9s steps(2, end) infinite;
+}
+
+.login-danger-symbol {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+  width: 29px;
+  height: 29px;
+  background: #090909;
+  clip-path: polygon(
+    28% 0,
+    72% 0,
+    100% 28%,
+    100% 72%,
+    72% 100%,
+    28% 100%,
+    0 72%,
+    0 28%
+  );
+  filter: drop-shadow(3px 3px 0 #45000a);
+}
+
+.login-danger-symbol::before {
+  position: absolute;
+  inset: 4px;
+  content: "";
+  background: #ef1b2d;
+  clip-path: inherit;
+}
+
+.login-danger-symbol::after {
+  position: absolute;
+  inset: 1px 0 0;
+  content: "!";
+  color: #fff;
+  font-family: monospace;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 29px;
+  text-align: center;
+  text-shadow: 2px 2px 0 #9d0010;
+}
+
+.login-rumor {
+  width: max-content;
+  max-width: 100%;
+  margin: 0.75rem auto 0;
+  color: #8fffd8;
+  font-size: 11px;
+  line-height: 1.8;
+  text-shadow: 2px 2px 0 #153b31;
+  animation: login-rumor-jitter 3.2s steps(1, end) infinite,
+    login-rumor-color 5s steps(5, end) infinite;
+}
+
 .login-panel {
+  position: relative;
+  z-index: 2;
+  margin-bottom: clamp(9rem, 20vw, 12rem);
   padding: 2.5rem 2rem !important;
+  box-shadow: 8px 8px 0 rgb(0 0 0 / 72%);
+}
+
+.login-minotaur-scene {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 0.75rem);
+  right: -2rem;
+  width: clamp(120px, 18vw, 175px);
+  aspect-ratio: 307 / 408;
+  pointer-events: none;
+}
+
+.login-minotaur-particles {
+  position: absolute;
+  z-index: 0;
+  inset: -20% -32%;
+  mix-blend-mode: screen;
+}
+
+.login-minotaur-particles canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+.login-minotaur {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  height: auto;
+  image-rendering: pixelated;
+  filter:
+    drop-shadow(5px 5px 0 rgb(0 0 0 / 75%))
+    drop-shadow(0 0 5px rgb(85 247 255 / 60%));
+  animation: login-minotaur-glow 2.8s steps(8, end) infinite;
 }
 
 .login-panel > *:not(:last-child) {
@@ -710,6 +886,95 @@
   margin-top: 0.5rem;
   padding: 14px 18px;
   font-size: 12px;
+}
+
+@keyframes login-logo-color-cycle {
+  to {
+    transform: rotate(360deg);
+    filter: hue-rotate(360deg);
+  }
+}
+
+@keyframes login-logo-pulse {
+  50% {
+    transform: scale(1.04) skewX(-1deg);
+  }
+}
+
+@keyframes login-logo-hit {
+  50% {
+    transform: scale(1.12, 0.9);
+  }
+}
+
+@keyframes login-danger-blink {
+  50% {
+    visibility: hidden;
+  }
+}
+
+@keyframes login-rumor-jitter {
+  0%,
+  88%,
+  100% {
+    transform: translate(0);
+  }
+  90% {
+    transform: translate(-2px, 0);
+  }
+  93% {
+    transform: translate(2px, -1px);
+  }
+  96% {
+    transform: translate(0, 1px);
+  }
+}
+
+@keyframes login-rumor-color {
+  0% {
+    color: #8fffd8;
+  }
+  40% {
+    color: #ffe066;
+  }
+  70% {
+    color: #ff9fdf;
+  }
+}
+
+@keyframes login-minotaur-glow {
+  50% {
+    filter:
+      drop-shadow(5px 5px 0 rgb(0 0 0 / 75%))
+      drop-shadow(0 0 8px rgb(255 63 145 / 75%));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-idle-logo,
+  .login-idle-logo::after,
+  .login-idle-logo img,
+  .login-danger,
+  .login-rumor,
+  .login-minotaur {
+    animation: none !important;
+  }
+
+  .login-minotaur-particles {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-panel {
+    margin-bottom: 8.5rem;
+  }
+
+  .login-minotaur-scene {
+    top: calc(100% + 0.5rem);
+    right: -0.5rem;
+    width: 110px;
+  }
 }
 
 .profile-page {

@@ -1,7 +1,9 @@
 export const pt = {
-  appTitle: 'Cofre de Personagens',
+  appTitle: 'Passageiros do Boi Feroz',
   login: {
-    subtitle: 'Use a senha do grupo para preencher sua ficha, ou a senha do mestre para ver todos os dados.',
+    subtitle: 'A senha é o nome do grupo do zap.',
+    nextSession: 'próxima sessão possivelmente dia 26/07',
+    rumor: 'tão indo matar o tanyl se pá',
     password: 'Senha',
     passwordPlaceholder: 'Digite a senha...',
     enter: 'Entrar',
