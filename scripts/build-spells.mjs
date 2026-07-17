@@ -14,7 +14,18 @@ const SOURCES = [
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-phb.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-xge.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-scag.json',
+  // SCC is missing from the ariestae mirror; 5etools-mirror-3 hosts Strixhaven spells.
+  'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-scc.json',
 ]
+
+/** Official class lists for sources that omit `classes.fromClassList` in 5etools. */
+const CLASS_OVERRIDES = {
+  'Borrowed Knowledge|SCC': ['Bard', 'Cleric', 'Warlock', 'Wizard'],
+  'Kinetic Jaunt|SCC': ['Artificer', 'Bard', 'Sorcerer', 'Wizard'],
+  'Silvery Barbs|SCC': ['Bard', 'Sorcerer', 'Wizard'],
+  'Vortex Warp|SCC': ['Artificer', 'Sorcerer', 'Wizard'],
+  'Wither and Bloom|SCC': ['Druid', 'Sorcerer', 'Wizard'],
+}
 
 const SCHOOL_PT = {
   A: 'Abjuração',
@@ -458,6 +469,12 @@ const NAME_PT = {
   'temple of the gods': 'Templo dos Deuses',
   'whirlwind': 'Redemoinho',
   'wrath of nature': 'Ira da Natureza',
+  // Strixhaven: A Curriculum of Chaos
+  'borrowed knowledge': 'Conhecimento Emprestado',
+  'kinetic jaunt': 'Sapateado Cinético',
+  'silvery barbs': 'Farpas Prateadas',
+  'vortex warp': 'Vortex de Entrelaçamento',
+  'wither and bloom': 'Murchar e Florescer',
 }
 
 function normalizeKey(name) {
@@ -469,6 +486,9 @@ function translateName(enName) {
 }
 
 function getClasses(spell) {
+  const overrideKey = spellKey(spell)
+  if (CLASS_OVERRIDES[overrideKey]) return [...CLASS_OVERRIDES[overrideKey]]
+
   const classes = new Set()
   const list = spell.classes?.fromClassList ?? []
   for (const entry of list) {
