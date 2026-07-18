@@ -71,7 +71,7 @@ export const pt = {
     spellSaveDC: 'CD para Evitar Magia',
     spellSlots: 'Espaços de Magia',
     cantrips: 'Truques',
-    preparedSpells: 'Magias Preparadas',
+    preparedSpells: 'Magias Conhecidas',
     knownSpells: 'Magias Conhecidas',
     addSpell: 'Adicionar magia',
     addCantrip: 'Adicionar truque',
@@ -146,6 +146,14 @@ export const pt = {
     ritualCasting: 'Conjuração Ritual',
     arcaneWard: 'Proteção Arcana',
     arcaneWardDetail: 'Escudo de abjuração: 2 × nível de mago + modificador de Inteligência PV',
+    adjustDensity: 'Ajustar Densidade',
+    adjustDensityDetail:
+      'Ação: dobre ou reduza pela metade o peso de uma criatura/objeto Grande ou menor a 9 m (concentração, 1 min)',
+    chronalShift: 'Deslocamento Cronal',
+    chronalShiftDetail:
+      'Reação: force a rerrolagem de um ataque, teste ou resistência a 9 m (2× descanso longo)',
+    temporalAwareness: 'Consciência Temporal',
+    temporalAwarenessDetail: 'Adicione seu modificador de Inteligência às jogadas de iniciativa',
     favoredEnemy: 'Inimigo Favorecido',
     favoredEnemyDetail: 'Escolha um tipo de criatura (ou duas raças humanoides)',
     favoredTerrain: 'Explorador Natural',
@@ -166,6 +174,12 @@ export const pt = {
     universalSpeechDetail: 'Ação: até 10 criaturas compreendem você por 1 hora (gasta inspiração)',
     projectedWard: 'Proteção Projetada',
     projectedWardDetail: 'Reação: use sua Proteção Arcana para proteger uma criatura a 9 m',
+    gravityWell: 'Poço Gravitacional',
+    gravityWellDetail:
+      'Ao conjurar uma magia em uma criatura, mova-a 1,5 m para um espaço desocupado (se disposta, atingida ou falhar na resistência)',
+    momentaryStasis: 'Estase Momentânea',
+    momentaryStasisDetail:
+      'Ação: criatura Grande ou menor a 18 m — CON ou fica incapacitada e velocidade 0 até o fim do seu próximo turno (usos = Int)',
     abilityScoreImprovement: 'Aumento de Atributo',
     abilityScoreImprovementDetail: '+2 em um atributo, ou +1 em dois, ou um talento',
     favoredEnemyUpgrade: 'Inimigo Favorecido adicional',
@@ -182,6 +196,12 @@ export const pt = {
     ironMindDetail: 'Proficiência em testes de resistência de Sabedoria',
     improvedAbjuration: 'Abjuração Aprimorada',
     improvedAbjurationDetail: 'Ao conjurar abjuração, adicione seu nível de mago ao teste de Contramágica/Dissipar Magia',
+    violentAttraction: 'Atração Violenta',
+    violentAttractionDetail:
+      'Reação: +1d10 em acerto com arma a 18 m, ou +2d10 em dano de queda (usos = Int, mín. 1)',
+    arcaneAbeyance: 'Suspensão Arcana',
+    arcaneAbeyanceDetail:
+      'Ao conjurar magia de 4º nível ou inferior, condense-a em um mote (1 h) para um aliado conjurar (1× descanso)',
   },
   levelUp: {
     adminAction: 'Subir todos de nível',

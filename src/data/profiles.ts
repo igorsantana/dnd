@@ -2,6 +2,8 @@ export type CharacterClass = 'wizard' | 'bard' | 'ranger' | 'fighter'
 
 export type SubclassId =
   | 'abjuration'
+  | 'graviturgy'
+  | 'chronurgy'
   | 'eloquence'
   | 'gloomStalker'
   | 'battleMaster'
@@ -26,8 +28,8 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     characterName: 'Yohann',
     characterClass: 'wizard',
     classLabel: 'Mago',
-    subclassId: 'abjuration',
-    subclassLabel: 'Abjuração',
+    subclassId: 'graviturgy',
+    subclassLabel: 'Graviturgy Magic',
     image: '/profiles/honda.png',
     accentColor: '#4a7cff',
   },

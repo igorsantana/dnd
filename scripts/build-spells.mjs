@@ -14,8 +14,9 @@ const SOURCES = [
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-phb.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-xge.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-scag.json',
-  // SCC is missing from the ariestae mirror; 5etools-mirror-3 hosts Strixhaven spells.
+  // SCC / EGW are missing from the ariestae mirror; 5etools-mirror-3 hosts them.
   'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-scc.json',
+  'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-egw.json',
 ]
 
 /** Official class lists for sources that omit `classes.fromClassList` in 5etools. */
@@ -25,6 +26,22 @@ const CLASS_OVERRIDES = {
   'Silvery Barbs|SCC': ['Bard', 'Sorcerer', 'Wizard'],
   'Vortex Warp|SCC': ['Artificer', 'Sorcerer', 'Wizard'],
   'Wither and Bloom|SCC': ['Druid', 'Sorcerer', 'Wizard'],
+  // Explorer's Guide to Wildemount — Dunamancy (wizard spell list)
+  'Sapping Sting|EGW': ['Wizard'],
+  'Gift of Alacrity|EGW': ['Wizard'],
+  'Magnify Gravity|EGW': ['Wizard'],
+  "Fortune's Favor|EGW": ['Wizard'],
+  'Immovable Object|EGW': ['Wizard'],
+  'Wristpocket|EGW': ['Wizard'],
+  'Pulse Wave|EGW': ['Wizard'],
+  'Gravity Sinkhole|EGW': ['Wizard'],
+  'Temporal Shunt|EGW': ['Wizard'],
+  'Gravity Fissure|EGW': ['Wizard'],
+  'Tether Essence|EGW': ['Wizard'],
+  'Dark Star|EGW': ['Wizard'],
+  'Reality Break|EGW': ['Wizard'],
+  'Ravenous Void|EGW': ['Wizard'],
+  'Time Ravage|EGW': ['Wizard'],
 }
 
 const SCHOOL_PT = {
@@ -475,6 +492,22 @@ const NAME_PT = {
   'silvery barbs': 'Farpas Prateadas',
   'vortex warp': 'Vortex de Entrelaçamento',
   'wither and bloom': 'Murchar e Florescer',
+  // Explorer's Guide to Wildemount — Dunamancy
+  'sapping sting': 'Ferrão Drenante',
+  'gift of alacrity': 'Dom da Alacridade',
+  'magnify gravity': 'Amplificar Gravidade',
+  "fortune's favor": 'Favor da Fortuna',
+  'immovable object': 'Objeto Imóvel',
+  'wristpocket': 'Bolso de Pulso',
+  'pulse wave': 'Onda de Pulso',
+  'gravity sinkhole': 'Sumidouro Gravitacional',
+  'temporal shunt': 'Desvio Temporal',
+  'gravity fissure': 'Fissura Gravitacional',
+  'tether essence': 'Amarração de Essência',
+  'dark star': 'Estrela Negra',
+  'reality break': 'Quebra da Realidade',
+  'ravenous void': 'Vazio Voraz',
+  'time ravage': 'Devastação Temporal',
 }
 
 function normalizeKey(name) {
