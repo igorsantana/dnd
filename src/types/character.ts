@@ -74,8 +74,23 @@ export interface ClassFeatures {
   arcaneRecovery?: string
   spellbookNotes?: string
   ritualCasting?: boolean
+  /** Pact Magic slots (warlock), separate from bard/wizard spell slots */
+  pactMagicSlots?: string
+  warlockPatron?: string
+  warlockNotes?: string
   /** Multi-select feature choices keyed by feature choiceKey */
   choices?: Record<string, string[]>
+}
+
+/** Per-class levels for multiclass characters. Character.level is total level. */
+export type ClassLevels = Partial<Record<CharacterClass | 'warlock', number>>
+
+export interface LevelUpNoticePayload {
+  characterName: string
+  fromLevel: number
+  toLevel: number
+  additions: string[]
+  leveledAt: string
 }
 
 export interface Character {
@@ -107,6 +122,10 @@ export interface Character {
   spells: Spell[]
   spellSlots: SpellSlots
   classFeatures: ClassFeatures
+  /** When set, feature resolution uses these instead of total character.level */
+  classLevels?: ClassLevels
+  /** Cloud-backed notice shown when the profile is opened (7 days) */
+  levelUpNotice?: LevelUpNoticePayload | null
 }
 
 export function defaultSpellSlotsForClass(characterClass: CharacterClass): SpellSlots {
@@ -302,9 +321,11 @@ export function mergeCharacterDefaults(
   return {
     ...createEmptyCharacter(),
     ...character,
-    class: character.class || classLabel,
+    class: classLabel?.trim() || character.class?.trim() || '',
     // Prefer profile subclass label so mangled cloud/free-text never sticks
     subclass: subclassLabel?.trim() || character.subclass?.trim() || '',
+    classLevels: character.classLevels,
+    levelUpNotice: character.levelUpNotice ?? null,
     background: repairCorruptedText(character.background),
     notes: repairCorruptedText(character.notes),
     attacks,

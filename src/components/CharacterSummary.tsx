@@ -5,6 +5,7 @@ import {
   bardicInspirationDie,
   bardicInspirationUses,
   choiceLabels,
+  classLevelForFeatures,
   getAttacksPerTurn,
   parseLevel,
   resolveFeatures,
@@ -213,7 +214,7 @@ export function CharacterSummary({ character }: { character: Character }) {
     character.classFeatures,
     characterClass,
     subclassId,
-    character.level,
+    characterClass ? String(classLevelForFeatures(character, characterClass)) : character.level,
     character.abilities.charisma,
   )
   const slotLevels = Object.keys(character.spellSlots).sort((a, b) => Number(a) - Number(b))

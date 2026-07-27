@@ -29,7 +29,7 @@ import {
 import { AvatarFrame } from './AvatarFrame'
 import { SnesAccentProvider } from '../contexts/SnesAccentContext'
 import { profileToSnesColor, snesTextClass } from '../lib/snes'
-import { getActiveNoticeForProfile } from '../lib/level-up-store'
+import { getActiveNoticeForProfile, getNoticeFromCharacter } from '../lib/level-up-store'
 
 const ABILITY_LABELS: { key: keyof Character['abilities']; label: string }[] = [
   { key: 'strength', label: 'FOR' },
@@ -126,7 +126,7 @@ export function PlayerSheet() {
 
     cacheCharacter(resolved)
     setCharacter(resolved)
-    setLevelUpNotice(getActiveNoticeForProfile(id))
+    setLevelUpNotice(getNoticeFromCharacter(resolved) ?? getActiveNoticeForProfile(id))
 
     if (!cloudResult.available) {
       setCloudHint(cloudUnavailableText)

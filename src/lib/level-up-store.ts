@@ -1,21 +1,27 @@
+import type { LevelUpNoticePayload } from '../types/character'
 import type { LevelUpPreview } from './level-up'
 
 const STORAGE_KEY = 'dnd-level-up-event'
 const NOTICE_MS = 7 * 24 * 60 * 60 * 1000
 
+export type LevelUpNotice = {
+  characterName: string
+  fromLevel: number
+  toLevel: number
+  additions: string[]
+}
+
 export interface LevelUpEvent {
   leveledAt: string
   fromLevel: number
   toLevel: number
-  notices: Record<
-    string,
-    {
-      characterName: string
-      fromLevel: number
-      toLevel: number
-      additions: string[]
-    }
-  >
+  notices: Record<string, LevelUpNotice>
+}
+
+function isFresh(leveledAt: string | undefined): boolean {
+  if (!leveledAt) return false
+  const age = Date.now() - new Date(leveledAt).getTime()
+  return Number.isFinite(age) && age >= 0 && age <= NOTICE_MS
 }
 
 export function loadLevelUpEvent(): LevelUpEvent | null {
@@ -56,9 +62,37 @@ export function saveLevelUpEvent(previews: LevelUpPreview[]): LevelUpEvent {
   return event
 }
 
-export function getActiveNoticeForProfile(profileId: string) {
+export function getActiveNoticeForProfile(profileId: string): LevelUpNotice | null {
   const event = loadLevelUpEvent()
-  if (!event) return null
-  const notice = event.notices[profileId]
-  return notice ?? null
+  if (!event || !isFresh(event.leveledAt)) return null
+  return event.notices[profileId] ?? null
+}
+
+/** Prefer cloud-backed notice on the character (works across devices). */
+export function getNoticeFromCharacter(
+  character: { levelUpNotice?: LevelUpNoticePayload | null; name?: string } | null | undefined,
+): LevelUpNotice | null {
+  const notice = character?.levelUpNotice
+  if (!notice || !isFresh(notice.leveledAt)) return null
+  return {
+    characterName: notice.characterName || character?.name || '',
+    fromLevel: notice.fromLevel,
+    toLevel: notice.toLevel,
+    additions: notice.additions ?? [],
+  }
+}
+
+export function buildNoticePayload(
+  characterName: string,
+  fromLevel: number,
+  toLevel: number,
+  additions: string[],
+): LevelUpNoticePayload {
+  return {
+    characterName,
+    fromLevel,
+    toLevel,
+    additions,
+    leveledAt: new Date().toISOString(),
+  }
 }

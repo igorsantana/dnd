@@ -11,6 +11,16 @@ export function parseLevel(level: string | number | undefined): number {
   return Number.isFinite(n) && n > 0 ? n : 1
 }
 
+/** Class level for features/slots when multiclassed; falls back to total character level. */
+export function classLevelForFeatures(
+  character: { level?: string; classLevels?: Partial<Record<string, number>> },
+  characterClass: CharacterClass,
+): number {
+  const fromLevels = character.classLevels?.[characterClass]
+  if (typeof fromLevels === 'number' && fromLevels > 0) return fromLevels
+  return parseLevel(character.level)
+}
+
 export function abilityModifier(score: string | number | undefined): number {
   const n = typeof score === 'number' ? score : Number.parseInt(String(score ?? '10'), 10)
   if (!Number.isFinite(n)) return 0

@@ -5,6 +5,7 @@ import { isCasterClass } from '../lib/classes'
 import {
   bardicInspirationDie,
   bardicInspirationUses,
+  classLevelForFeatures,
   effectiveMaxChoices,
   getAttacksPerTurn,
   parseLevel,
@@ -152,8 +153,9 @@ export function ClassFeatureSection({
   'characterClass' | 'subclassId' | 'character' | 'onUpdateClassFeatures'
 >) {
   const t = pt.classes
-  const features = resolveFeatures(characterClass, subclassId, character.level)
-  const attacksPerTurn = getAttacksPerTurn(characterClass, character.level)
+  const classLevel = classLevelForFeatures(character, characterClass)
+  const features = resolveFeatures(characterClass, subclassId, classLevel)
+  const attacksPerTurn = getAttacksPerTurn(characterClass, classLevel)
   const showAttacksPerTurn = characterClass === 'fighter' || characterClass === 'ranger'
   const choices = character.classFeatures.choices ?? {}
 
@@ -181,7 +183,7 @@ export function ClassFeatureSection({
 
   function renderFeature(feature: ClassFeatureDef) {
     if (feature.id === 'bardicInspiration') {
-      const die = bardicInspirationDie(character.level)
+      const die = bardicInspirationDie(classLevel)
       const uses = bardicInspirationUses(character.abilities.charisma)
       return (
         <div key={feature.id} className="feature-block">
@@ -195,7 +197,7 @@ export function ClassFeatureSection({
     }
 
     if (feature.id === 'songOfRest') {
-      const die = songOfRestDie(character.level)
+      const die = songOfRestDie(classLevel)
       return (
         <div key={feature.id} className="feature-block">
           <StatDisplay
@@ -259,7 +261,7 @@ export function ClassFeatureSection({
             label={featureLabel(feature)}
             options={feature.options}
             selected={choices[feature.choiceKey] ?? []}
-            maxChoices={effectiveMaxChoices(feature, character.level)}
+            maxChoices={effectiveMaxChoices(feature, classLevel)}
             onChange={(next) => updateChoices(feature.choiceKey!, next)}
           />
           {featureDetail(feature) && (
