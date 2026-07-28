@@ -252,6 +252,7 @@ export function PlayerSheet() {
       description: '',
       attuned: false,
       equipped: false,
+      personal: false,
     }
     update('magicItems', [...character.magicItems, item])
     setEditingMagicItemId(item.id)
@@ -275,6 +276,7 @@ export function PlayerSheet() {
       name: '',
       quantity: '1',
       notes: '',
+      personal: false,
     }
     update('inventory', [...character.inventory, item])
     setEditingInventoryItemId(item.id)
@@ -569,6 +571,11 @@ export function PlayerSheet() {
                                 checked={item.equipped}
                                 onChange={(v) => updateMagicItem(item.id, { equipped: v })}
                               />
+                              <CheckboxField
+                                label={t.fields.personal}
+                                checked={Boolean(item.personal)}
+                                onChange={(v) => updateMagicItem(item.id, { personal: v })}
+                              />
                               <TextArea
                                 label={t.fields.description}
                                 value={item.description}
@@ -598,6 +605,7 @@ export function PlayerSheet() {
                           meta={[
                             item.attuned ? t.fields.attuned : null,
                             item.equipped ? t.fields.equipped : null,
+                            item.personal ? t.fields.personal : null,
                           ]
                             .filter(Boolean)
                             .join(' · ') || undefined}
@@ -637,6 +645,11 @@ export function PlayerSheet() {
                                 onChange={(v) => updateInventoryItem(item.id, { notes: v })}
                                 className="col-span-2"
                               />
+                              <CheckboxField
+                                label={t.fields.personal}
+                                checked={Boolean(item.personal)}
+                                onChange={(v) => updateInventoryItem(item.id, { personal: v })}
+                              />
                             </div>
                             <div className="sheet-row-action">
                               <button
@@ -661,7 +674,11 @@ export function PlayerSheet() {
                         <CompactSheetItem
                           key={item.id}
                           title={item.name}
-                          meta={[item.quantity && `×${item.quantity}`, item.notes]
+                          meta={[
+                            item.quantity && `×${item.quantity}`,
+                            item.notes,
+                            item.personal ? t.fields.personal : null,
+                          ]
                             .filter(Boolean)
                             .join(' · ')}
                           onEdit={() => setEditingInventoryItemId(item.id)}

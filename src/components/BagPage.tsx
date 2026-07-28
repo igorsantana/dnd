@@ -137,6 +137,7 @@ function aggregateInventory(characters: Character[]): AggregatedInventoryRow[] {
     const owner = ownerFromCharacter(character)
     if (!owner) continue
     for (const item of character.inventory ?? []) {
+      if (item.personal) continue
       const name = item.name?.trim()
       if (!name) continue
       const key = normalizeItemName(name)
@@ -161,7 +162,7 @@ function aggregateMagic(characters: Character[]): AggregatedMagicRow[] {
     const owner = ownerFromCharacter(character)
     if (!owner) continue
     for (const item of character.magicItems ?? []) {
-      if (item.equipped) continue
+      if (item.personal) continue
       const name = item.name?.trim()
       if (!name) continue
       const key = `${normalizeItemName(name)}::${item.attuned ? '1' : '0'}`

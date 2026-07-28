@@ -19,6 +19,8 @@ export interface MagicItem {
   attuned: boolean
   /** Worn / currently equipped by the character */
   equipped: boolean
+  /** Hidden from party bag (Saco do Boi) lists */
+  personal?: boolean
 }
 
 export interface InventoryItem {
@@ -26,6 +28,8 @@ export interface InventoryItem {
   name: string
   quantity: string
   notes: string
+  /** Hidden from party bag (Saco do Boi) lists */
+  personal?: boolean
 }
 
 export interface Currency {
@@ -261,6 +265,17 @@ function repairMagicItems(items: MagicItem[] | undefined): MagicItem[] {
     description: repairCorruptedText(item.description),
     attuned: Boolean(item.attuned),
     equipped: Boolean(item.equipped),
+    personal: Boolean(item.personal),
+  }))
+}
+
+function repairInventoryItems(items: InventoryItem[] | undefined): InventoryItem[] {
+  return (items ?? []).map((item) => ({
+    ...item,
+    name: repairCorruptedText(item.name),
+    notes: repairCorruptedText(item.notes),
+    quantity: item.quantity ?? '1',
+    personal: Boolean(item.personal),
   }))
 }
 
@@ -334,6 +349,7 @@ export function mergeCharacterDefaults(
     notes: repairCorruptedText(character.notes),
     attacks,
     magicItems: repairMagicItems(character.magicItems),
+    inventory: repairInventoryItems(character.inventory),
     spellAttackBonus: character.spellAttackBonus || (isGeraldo ? '+7' : ''),
     spellSaveDC: character.spellSaveDC || (isGeraldo ? '15' : ''),
     spells,

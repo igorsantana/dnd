@@ -407,6 +407,7 @@ export function CharacterSummary({ character }: { character: Character }) {
                   {[
                     i.attuned ? t.fields.attuned : null,
                     i.equipped ? t.fields.equipped : null,
+                    i.personal ? t.fields.personal : null,
                   ]
                     .filter(Boolean)
                     .map((label) => ` (${label})`)
@@ -433,6 +434,7 @@ export function CharacterSummary({ character }: { character: Character }) {
                 <span className="text-white">
                   {i.name}
                   {hasText(i.quantity) && i.quantity !== '1' ? ` ×${i.quantity}` : ''}
+                  {i.personal ? ` (${t.fields.personal})` : ''}
                 </span>
                 {hasText(i.notes) && <span className="text-galaxy-color opacity-70">{i.notes}</span>}
               </li>
