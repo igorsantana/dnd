@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Character, InventoryItem } from '../types/character'
+import type { Character, Currency, InventoryItem } from '../types/character'
 import { PLAYER_PROFILES, getProfileById } from '../data/profiles'
 import { fetchCharactersFromCloud } from '../lib/remote-storage'
 import { fetchPartyBag, pushPartyBag } from '../lib/party-storage'
@@ -40,8 +40,18 @@ interface AggregatedMagicRow {
   owners: OwnerRef[]
 }
 
+type CoinKey = keyof Currency
+
 const SAVE_DEBOUNCE_MS = 1000
 const POLL_MS = 4000
+
+const COIN_ORDER: { key: CoinKey; label: string; className: string }[] = [
+  { key: 'copper', label: 'pc', className: 'bag-coin--copper' },
+  { key: 'silver', label: 'pp', className: 'bag-coin--silver' },
+  { key: 'electrum', label: 'pe', className: 'bag-coin--electrum' },
+  { key: 'gold', label: 'po', className: 'bag-coin--gold' },
+  { key: 'platinum', label: 'pl', className: 'bag-coin--platinum' },
+]
 
 function normalizeItemName(name: string): string {
   return name.trim().toLowerCase().replace(/\s+/g, ' ')
@@ -56,6 +66,52 @@ function formatQty(n: number): string {
   if (!Number.isFinite(n)) return '1'
   if (Math.abs(n - Math.round(n)) < 0.001) return String(Math.round(n))
   return n.toLocaleString('pt-BR', { maximumFractionDigits: 2 })
+}
+
+function parseCoin(value: string | undefined): number {
+  const n = Number.parseInt(String(value ?? '0').replace(/\D/g, ''), 10)
+  return Number.isFinite(n) ? n : 0
+}
+
+function aggregateCurrency(characters: Character[]): Record<CoinKey, number> {
+  const totals: Record<CoinKey, number> = {
+    copper: 0,
+    silver: 0,
+    electrum: 0,
+    gold: 0,
+    platinum: 0,
+  }
+  for (const character of characters) {
+    const c = character.currency
+    if (!c) continue
+    totals.copper += parseCoin(c.copper)
+    totals.silver += parseCoin(c.silver)
+    totals.electrum += parseCoin(c.electrum)
+    totals.gold += parseCoin(c.gold)
+    totals.platinum += parseCoin(c.platinum)
+  }
+  return totals
+}
+
+function MarioCoin({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 16 16"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      shapeRendering="crispEdges"
+    >
+      <path
+        fill="currentColor"
+        d="M5 1h6v1H5V1zm-2 2h2V2H4v1H3v2H2v6h1v2h1v1h2v1h6v-1h2v-1h1v-2h1V5h-1V3h-1V2h-2v1H5V3H3zm1 1h1V3H4v1zm8 0h1V3h-1v1zM3 5h1V4H3v1zm10 0h1V4h-1v1zM2 6h1V5H2v1zm12 0h1V5h-1v1zm0 5h1V7h-1v4zM2 11h1V7H2v4zm1 2h1v-1H3v1zm10 0h1v-1h-1v1zM5 14h1v-1H5v1zm5 0h1v-1h-1v1z"
+      />
+      <path fill="#000" fillOpacity="0.22" d="M6 3h4v1H6V3zM4 5h1V4H4v1zm7 0h1V4h-1v1zM5 12h6v1H5v-1z" />
+      <path fill="#fff" fillOpacity="0.35" d="M5 4h1v5H5V4zm1-1h3v1H6V3z" />
+      <rect x="7" y="5" width="2" height="5" fill="#000" fillOpacity="0.28" />
+    </svg>
+  )
 }
 
 function ownerFromCharacter(character: Character): OwnerRef | null {
@@ -210,6 +266,7 @@ export function BagPage({ onBack }: BagPageProps) {
 
   const commonRows = useMemo(() => aggregateInventory(characters), [characters])
   const magicRows = useMemo(() => aggregateMagic(characters), [characters])
+  const partyCoins = useMemo(() => aggregateCurrency(characters), [characters])
 
   const persistBag = useCallback(async (items: InventoryItem[]) => {
     setStatus('saving')
@@ -322,6 +379,17 @@ export function BagPage({ onBack }: BagPageProps) {
           <h1 className="snes-container-title has-galaxy-underline">{t.title}</h1>
           {cloudHint && <p className="text-plumber-color party-page-subtitle">{cloudHint}</p>}
         </div>
+
+        <div className="bag-party-coins" aria-label={t.partyCoins}>
+          {COIN_ORDER.map((coin) => (
+            <span key={coin.key} className={`bag-coin-chip ${coin.className}`} title={coin.label}>
+              <MarioCoin className="bag-coin-icon" />
+              <span className="bag-coin-amount">{partyCoins[coin.key]}</span>
+              <span className="bag-coin-label">{coin.label}</span>
+            </span>
+          ))}
+        </div>
+
         <div className="party-page-actions">
           {statusLabel && (
             <span className="text-galaxy-color party-sync-status" role="status">

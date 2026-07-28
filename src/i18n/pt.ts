@@ -65,6 +65,7 @@ export const pt = {
     close: 'Fechar',
     noDescription: 'Sem descrição.',
     ownersLabel: 'Donos',
+    partyCoins: 'Moedas do grupo',
     saving: 'Salvando…',
     saved: 'Salvo',
     error: 'Falha ao salvar',
