@@ -1572,6 +1572,11 @@
   margin-top: 1.5rem;
 }
 
+.level-up-modal-actions {
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+
 .level-up-scroll {
   --pixel-list-height: 16rem;
   margin-top: 0.65rem;

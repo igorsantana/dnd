@@ -8,6 +8,7 @@ interface LevelUpNoticeModalProps {
   toLevel: number
   additions: string[]
   onContinue: () => void
+  onDontShowAgain: () => void
 }
 
 export function LevelUpNoticeModal({
@@ -16,6 +17,7 @@ export function LevelUpNoticeModal({
   toLevel,
   additions,
   onContinue,
+  onDontShowAgain,
 }: LevelUpNoticeModalProps) {
   const t = pt.levelUp
   const formattedAdditions = additions.map((line) => {
@@ -72,9 +74,16 @@ export function LevelUpNoticeModal({
             ))}
           </ul>
         </PixelScrollList>
-        <div className="snes-modal-actions">
-          <PrimaryButton type="button" color="galaxy" onClick={onContinue}>
-            {t.noticeContinue}
+        <div className="snes-modal-actions level-up-modal-actions">
+          <button
+            type="button"
+            className="snes-link text-galaxy-color"
+            onClick={onContinue}
+          >
+            {t.noticeShowAgain}
+          </button>
+          <PrimaryButton type="button" color="galaxy" onClick={onDontShowAgain}>
+            {t.noticeDontShowAgain}
           </PrimaryButton>
         </div>
       </div>

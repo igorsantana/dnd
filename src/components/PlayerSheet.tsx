@@ -30,7 +30,7 @@ import {
 import { AvatarFrame } from './AvatarFrame'
 import { SnesAccentProvider } from '../contexts/SnesAccentContext'
 import { profileToSnesColor, snesTextClass } from '../lib/snes'
-import { getActiveNoticeForProfile, getNoticeFromCharacter } from '../lib/level-up-store'
+import { getActiveNoticeForProfile, getNoticeFromCharacter, dismissLevelUpNoticeForProfile } from '../lib/level-up-store'
 
 const ABILITY_LABELS: { key: keyof Character['abilities']; label: string }[] = [
   { key: 'strength', label: 'FOR' },
@@ -418,6 +418,18 @@ export function PlayerSheet() {
             toLevel={levelUpNotice.toLevel}
             additions={levelUpNotice.additions}
             onContinue={() => setLevelUpNotice(null)}
+            onDontShowAgain={() => {
+              if (profileId) dismissLevelUpNoticeForProfile(profileId)
+              const cleared = {
+                ...character,
+                profileId: profileId ?? character.profileId,
+                levelUpNotice: null,
+              }
+              const savedLocal = saveCharacter(cleared)
+              setCharacter(savedLocal)
+              setLevelUpNotice(null)
+              void pushCharacterToCloud(savedLocal)
+            }}
           />
         )}
 

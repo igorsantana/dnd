@@ -272,6 +272,8 @@ export const pt = {
     noticeSubtitle: (from: number, to: number) => `Nível ${from} → ${to}`,
     noticeAdditions: 'O que foi adicionado',
     noticeContinue: 'Continuar',
+    noticeShowAgain: 'Ver depois',
+    noticeDontShowAgain: 'Não mostrar novamente',
     spellSlotsUpdated: (summary: string) => `Espaços de magia — ${summary}`,
     proficiencyUpdated: (bonus: string) => `Bônus de proficiência: ${bonus}`,
     attacksUpdated: (n: number) => `Ataques por turno: ${n}`,

@@ -68,6 +68,24 @@ export function getActiveNoticeForProfile(profileId: string): LevelUpNotice | nu
   return event.notices[profileId] ?? null
 }
 
+/** Remove a profile notice from local storage so it won't show again on this browser. */
+export function dismissLevelUpNoticeForProfile(profileId: string): void {
+  const event = loadLevelUpEvent()
+  if (!event?.notices?.[profileId]) return
+  const { [profileId]: _removed, ...rest } = event.notices
+  if (Object.keys(rest).length === 0) {
+    localStorage.removeItem(STORAGE_KEY)
+    return
+  }
+  localStorage.setItem(
+    STORAGE_KEY,
+    JSON.stringify({
+      ...event,
+      notices: rest,
+    }),
+  )
+}
+
 /** Prefer cloud-backed notice on the character (works across devices). */
 export function getNoticeFromCharacter(
   character: { levelUpNotice?: LevelUpNoticePayload | null; name?: string } | null | undefined,
