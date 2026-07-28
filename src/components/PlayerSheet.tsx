@@ -15,7 +15,6 @@ import { ProfilePicker, type SharedPageId } from './ProfilePicker'
 import { NotesPage } from './NotesPage'
 import { BagPage } from './BagPage'
 import { ClassFeatureSection, SpellcastingSections } from './ClassSections'
-import { SaveCelebration } from './SaveCelebration'
 import { LevelUpNoticeModal } from './LevelUpNoticeModal'
 import {
   SectionTitle,
@@ -86,8 +85,10 @@ export function PlayerSheet() {
   const [profileId, setProfileId] = useState<string | null>(() => getSessionProfile())
   const [sharedPage, setSharedPage] = useState<SharedPageId | null>(null)
   const [character, setCharacter] = useState<Character>(createEmptyCharacter)
-  const [showCelebration, setShowCelebration] = useState(false)
   const [ready, setReady] = useState(false)
+  const [showSaveDance, setShowSaveDance] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+  const saveDanceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(false)
   const [cloudHint, setCloudHint] = useState<string | null>(null)
   const [editingAttackId, setEditingAttackId] = useState<string | null>(null)
@@ -292,7 +293,11 @@ export function PlayerSheet() {
   }
 
   async function handleSave() {
-    if (!character.name.trim()) return
+    if (!character.name.trim() || isSaving) return
+
+    setIsSaving(true)
+    setShowSaveDance(true)
+    if (saveDanceTimerRef.current) clearTimeout(saveDanceTimerRef.current)
 
     const savedLocal = saveCharacter({
       ...character,
@@ -308,7 +313,9 @@ export function PlayerSheet() {
     } else {
       setCloudHint(cloudUnavailableText)
     }
-    setShowCelebration(true)
+
+    setIsSaving(false)
+    saveDanceTimerRef.current = setTimeout(() => setShowSaveDance(false), 1500)
   }
 
   if (sharedPage === 'notes') {
@@ -398,11 +405,11 @@ export function PlayerSheet() {
   return (
     <SnesAccentProvider color={snesColor}>
       <div className="app-shell app-sheet min-h-screen bg-black">
-        {showCelebration && (
-          <SaveCelebration
-            accentColor={profile.accentColor}
-            onDone={() => setShowCelebration(false)}
-          />
+        {isSaving && <div className="save-dim" aria-hidden="true" />}
+        {showSaveDance && (
+          <div className="save-minotaur-pop" aria-hidden="true">
+            <img src="/sprites/minotaur-dance.gif" alt="" className="save-minotaur-gif" />
+          </div>
         )}
         {levelUpNotice && (
           <LevelUpNoticeModal

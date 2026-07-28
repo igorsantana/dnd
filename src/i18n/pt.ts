@@ -10,10 +10,12 @@ export const pt = {
     error: 'Senha incorreta. Tente novamente.',
   },
   profiles: {
-    title: 'Quem está jogando?',
+    title: 'Será q Tanyl morreu?',
     subtitle: 'Escolha seu perfil para abrir a ficha do personagem.',
     player: 'Jogador',
     character: 'Personagem',
+    utilitiesTitle: 'Utilidades',
+    recapNews: 'Recap/News',
     notesTile: 'Anotações',
     notesTileBrand: 'Diário de Viagem',
     bagTile: 'Mochila',

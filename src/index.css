@@ -199,14 +199,14 @@
 }
 
 .avatar-frame--profile {
-  width: 168px;
-  height: 168px;
+  width: 84px;
+  height: 84px;
 }
 
 @media (min-width: 640px) {
   .avatar-frame--profile {
-    width: 192px;
-    height: 192px;
+    width: 96px;
+    height: 96px;
   }
 }
 
@@ -222,8 +222,8 @@
   }
 
   .avatar-frame--profile {
-    width: 216px;
-    height: 216px;
+    width: 108px;
+    height: 108px;
   }
 }
 
@@ -234,8 +234,8 @@
   }
 
   .avatar-frame--profile {
-    width: 240px;
-    height: 240px;
+    width: 120px;
+    height: 120px;
   }
 }
 
@@ -1062,14 +1062,71 @@
   padding: 3rem 2rem 4rem;
 }
 
+.profile-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem 1.25rem;
+  width: 100%;
+  max-width: 72rem;
+  margin-bottom: 3.5rem;
+}
+
+.profile-title-row .profile-title {
+  margin-bottom: 0;
+}
+
+.profile-recap-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 10px;
+  line-height: 1.4;
+  padding: 10px 12px;
+  animation: profile-recap-blink 1s steps(2, end) infinite;
+}
+
+.profile-recap-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  image-rendering: pixelated;
+}
+
+@keyframes profile-recap-blink {
+  50% {
+    filter: brightness(1.35);
+    box-shadow: 4px 4px 0 #000, 0 0 0 2px #ffef00;
+  }
+}
+
+.profile-section {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.profile-section + .profile-section {
+  margin-top: 2.75rem;
+}
+
+.profile-section-title {
+  margin: 0 auto 1.75rem;
+  text-align: center;
+  font-size: clamp(12px, 2vw, 16px);
+}
+
 .profile-grid {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: 2.5rem 3rem;
   width: 100%;
-  max-width: 72rem;
-  margin-inline: auto;
+}
+
+.profile-grid-utilities {
+  gap: 2rem 2.5rem;
 }
 
 .profile-card {
@@ -1104,6 +1161,60 @@
   max-width: 28rem;
   font-size: 9px;
   line-height: 1.8;
+}
+
+/* Save minotaur pop-up */
+.save-dim {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: all;
+  background: rgb(0 0 0 / 0.45);
+}
+
+.save-minotaur-pop {
+  position: fixed;
+  z-index: 9998;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  pointer-events: none;
+  animation: save-minotaur-rise 1.5s steps(4, end) forwards;
+}
+
+.save-minotaur-gif {
+  display: block;
+  width: clamp(110px, 16vw, 170px);
+  height: auto;
+  image-rendering: pixelated;
+  filter: drop-shadow(4px 4px 0 rgb(0 0 0 / 75%));
+}
+
+@keyframes save-minotaur-rise {
+  0% {
+    transform: translateX(-50%) translateY(110%);
+    opacity: 0;
+  }
+  6% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+  78% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(-50%) translateY(110%);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .save-minotaur-pop {
+    animation: none;
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
 }
 
 /* Login / panels — keep container spacing sane */
@@ -2318,7 +2429,7 @@
 }
 
 .profile-title {
-  margin-bottom: 5rem;
+  margin-bottom: 0;
 }
 
 /* Spell choices and selected spells remain readable below the search field. */

@@ -61,7 +61,7 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
         </div>
 
         <PrimaryButton type="button" onClick={onBack} color="galaxy" className="inspiration-back-btn">
-          Voltar à ficha
+          Voltar aos perfis
         </PrimaryButton>
       </div>
     </div>
