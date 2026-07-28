@@ -1,6 +1,6 @@
-import { put } from '@vercel/blob'
+﻿import { put } from '@vercel/blob'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { authRole } from './_auth'
+import { authRole } from './_auth.js'
 import { Buffer } from 'buffer'
 
 export const config = {

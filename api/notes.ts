@@ -1,5 +1,5 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node'
-import { authRole, getRedis, redisConfigured } from './_auth'
+﻿import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { authRole, getRedis, redisConfigured } from './_auth.js'
 
 const NOTES_KEY = 'dnd:party:notes'
 
