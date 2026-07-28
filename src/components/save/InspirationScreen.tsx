@@ -10,16 +10,11 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
     <div className="inspiration-screen" role="dialog" aria-live="polite">
       <div className="inspiration-screen-inner">
         <blockquote className="snes-blockquote has-galaxy-bg inspiration-main-quote">
-          <p className="inspiration-body">
-            se vc tiver salvo todos os dados da sua ficha possíveis e não tenha ficado de preguiça, de fato
-            vai valer um ponto de inspiração. mas eu vou ver se tá tudo salvo mesmo. dá pra salvar várias
-            vezes, fica suave.
-          </p>
           <div className="inspiration-session text-sunshine-color">
             <p>próxima sessão:</p>
-            <p>data: a decidir (26/07?)</p>
-            <p>numero: 22</p>
-            <p>onde terminaram: bebendo no cais</p>
+            <p>data: a decidir (16/08?)</p>
+            <p>numero: 23</p>
+            <p>onde terminaram: casa de shaundakul</p>
           </div>
         </blockquote>
 
@@ -54,10 +49,13 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
             <ul className="inspiration-recap-list text-galaxy-color">
               <li>visitaram 2 vilas</li>
               <li>visitaram 1 plano diferente do material</li>
-              <li>fumaram 14kg de erva de halfling</li>
+              <li>fumaram 14.2kg de erva de halfling</li>
               <li>bebaram em mais de 5 localizações diferentes</li>
               <li>não encontraram as tão famosas elfas</li>
               <li>tiveram uma morte na pt</li>
+              <li>encontraram um deus</li>
+              <li>pularam num portal místico de druida</li>
+              <li>mataram um mago lvl 8</li>
             </ul>
           </blockquote>
         </div>

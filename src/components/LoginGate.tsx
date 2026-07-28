@@ -205,7 +205,6 @@ function IdleLogo() {
 export function LoginGate({ onLogin }: { onLogin: (role: AuthRole) => void }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
-  const isIdle = password.length === 0
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -220,8 +219,8 @@ export function LoginGate({ onLogin }: { onLogin: (role: AuthRole) => void }) {
 
   return (
     <ParticlesProvider init={initializeLoginParticles}>
-      <div className={`app-shell login-page min-h-screen bg-black flex items-center justify-center ${isIdle ? 'is-idle' : ''}`}>
-        {isIdle && <IdleLogo />}
+      <div className="app-shell login-page min-h-screen bg-black flex items-center justify-center is-idle">
+        <IdleLogo />
         <div className="login-page-inner">
           <header className="login-page-header">
             <h1 className="snes-container-title has-galaxy-underline">{pt.appTitle}</h1>
@@ -235,7 +234,7 @@ export function LoginGate({ onLogin }: { onLogin: (role: AuthRole) => void }) {
           </header>
 
           <form onSubmit={handleSubmit} className="snes-container snes-panel login-panel has-grey-bg">
-            {isIdle && <LoginMinotaur />}
+            <LoginMinotaur />
             <div className="snes-form-group">
               <label htmlFor="password">{pt.login.password}</label>
               <div className={`snes-input login-input ${error ? 'is-error' : ''}`}>

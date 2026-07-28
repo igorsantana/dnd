@@ -99,7 +99,7 @@ export async function fetchCharactersFromCloud(): Promise<{
   try {
     const response = await fetch(API_URL, {
       headers: {
-        Authorization: `Bearer ${getAdminPassword()}`,
+        Authorization: `Bearer ${getPlayerPassword()}`,
       },
     })
     if (response.status === 503) {

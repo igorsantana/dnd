@@ -1,3 +1,8 @@
 {
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/((?!api/|src/|@vite/|@react-refresh|@fs/|@id/|node_modules/|assets/|sprites/|profiles/|favicon\\.ico).*)",
+      "destination": "/index.html"
+    }
+  ]
 }

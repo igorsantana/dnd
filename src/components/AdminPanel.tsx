@@ -16,6 +16,8 @@ import { getProfileById, PLAYER_PROFILES } from '../data/profiles'
 import { PrimaryButton, SectionTitle } from './ui'
 import { CharacterSummary } from './CharacterSummary'
 import { ConfirmModal } from './ConfirmModal'
+import { NotesPage } from './NotesPage'
+import { BagPage } from './BagPage'
 
 function normalizeCharacter(character: Character): Character {
   const profile =
@@ -70,9 +72,17 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [cloudStatus, setCloudStatus] = useState<'idle' | 'loading' | 'ok' | 'offline'>('idle')
   const [confirmLevelUp, setConfirmLevelUp] = useState(false)
   const [levelUpMessage, setLevelUpMessage] = useState<string | null>(null)
+  const [sharedPage, setSharedPage] = useState<'notes' | 'bag' | null>(null)
   const t = pt.admin
   const lt = pt.levelUp
   const cloudUnavailableText = import.meta.env.DEV ? t.cloudLocal : t.cloudOffline
+
+  if (sharedPage === 'notes') {
+    return <NotesPage onBack={() => setSharedPage(null)} />
+  }
+  if (sharedPage === 'bag') {
+    return <BagPage onBack={() => setSharedPage(null)} />
+  }
 
   const sharedLevel = characters.length
     ? Math.min(...characters.map((c) => parseLevel(c.level)))
@@ -191,6 +201,22 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
             onClick={() => setConfirmLevelUp(true)}
           >
             {t.levelUpAll}
+          </PrimaryButton>
+          <PrimaryButton
+            type="button"
+            color="galaxy"
+            className="admin-level-up-btn"
+            onClick={() => setSharedPage('notes')}
+          >
+            {pt.profiles.notesTile}
+          </PrimaryButton>
+          <PrimaryButton
+            type="button"
+            color="nature"
+            className="admin-level-up-btn"
+            onClick={() => setSharedPage('bag')}
+          >
+            {pt.profiles.bagTile}
           </PrimaryButton>
           {levelUpMessage && (
             <p className="text-nature-color admin-level-up-msg" role="status">

@@ -1,19 +1,8 @@
-import { Redis } from '@upstash/redis'
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { authRole, getRedis, redisConfigured } from './_auth'
 
-function envPassword(name: string, fallback: string): string {
-  const value = process.env[name]
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback
-}
-
-const PLAYER_PASSWORD = envPassword('PLAYER_PASSWORD', envPassword('VITE_PLAYER_PASSWORD', 'calzone'))
-const ADMIN_PASSWORD = envPassword('ADMIN_PASSWORD', envPassword('VITE_ADMIN_PASSWORD', 'calzoneduplo'))
 const INDEX_KEY = 'dnd:character-index'
 const PROFILE_IDS = new Set(['honda', 'antunes', 'keiti', 'rafael', 'leozin'])
-
-function getRedis(): Redis {
-  return Redis.fromEnv()
-}
 
 interface StoredCharacter {
   id: string
@@ -32,14 +21,6 @@ async function writeIndex(ids: string[]): Promise<void> {
   await getRedis().set(INDEX_KEY, ids)
 }
 
-function authRole(req: VercelRequest): 'player' | 'admin' | null {
-  const header = req.headers.authorization ?? ''
-  const token = header.replace(/^Bearer\s+/i, '')
-  if (token === ADMIN_PASSWORD) return 'admin'
-  if (token === PLAYER_PASSWORD) return 'player'
-  return null
-}
-
 function storageKey(id: string): string {
   return `dnd:character:${id}`
 }
@@ -51,7 +32,7 @@ function profileIdFromQuery(req: VercelRequest): string | null {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  if (!redisConfigured()) {
     return res.status(503).json({
       error: 'Cloud storage not configured. Add Upstash Redis from the Vercel Marketplace.',
     })
@@ -76,7 +57,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(200).json(character)
       }
 
-      if (role !== 'admin') {
+      if (role !== 'admin' && role !== 'player') {
         return res.status(401).json({ error: 'Unauthorized' })
       }
 

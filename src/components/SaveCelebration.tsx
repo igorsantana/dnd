@@ -63,7 +63,6 @@ export function SaveCelebration({ accentColor, onDone }: SaveCelebrationProps) {
         ))}
       </div>
 
-      <p className="save-message">Valeu, ganhou ponto de inspiração</p>
       <div className="save-fade-to-black" aria-hidden />
     </div>
   )

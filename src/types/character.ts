@@ -17,6 +17,8 @@ export interface MagicItem {
   name: string
   description: string
   attuned: boolean
+  /** Worn / currently equipped by the character */
+  equipped: boolean
 }
 
 export interface InventoryItem {
@@ -257,6 +259,8 @@ function repairMagicItems(items: MagicItem[] | undefined): MagicItem[] {
     ...item,
     name: repairCorruptedText(item.name),
     description: repairCorruptedText(item.description),
+    attuned: Boolean(item.attuned),
+    equipped: Boolean(item.equipped),
   }))
 }
 

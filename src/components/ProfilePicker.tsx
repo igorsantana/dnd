@@ -4,7 +4,34 @@ import { pt } from '../i18n/pt'
 import { profileToSnesColor, snesTextClass } from '../lib/snes'
 import { AvatarFrame } from './AvatarFrame'
 
-export function ProfilePicker({ onSelect }: { onSelect: (profileId: string) => void }) {
+export type SharedPageId = 'notes' | 'bag'
+
+interface ProfilePickerProps {
+  onSelect: (profileId: string) => void
+  onSelectShared: (page: SharedPageId) => void
+}
+
+const SHARED_TILES: {
+  id: SharedPageId
+  brand: string
+  title: string
+  image: string
+}[] = [
+  {
+    id: 'notes',
+    brand: pt.profiles.notesTileBrand,
+    title: pt.profiles.notesTile,
+    image: '/sprites/magic-scroll.png',
+  },
+  {
+    id: 'bag',
+    brand: pt.profiles.bagTileBrand,
+    title: pt.profiles.bagTile,
+    image: '/sprites/boi-bag-backpack.png',
+  },
+]
+
+export function ProfilePicker({ onSelect, onSelectShared }: ProfilePickerProps) {
   const [hoveredId, setHoveredId] = useState<string | null>(null)
 
   return (
@@ -37,6 +64,26 @@ export function ProfilePicker({ onSelect }: { onSelect: (profileId: string) => v
                 <p className={isHovered ? 'text-white' : 'text-galaxy-color'}>{profile.playerName}</p>
                 <p className={snesTextClass(snesColor)}>{profile.characterName}</p>
                 <p className="text-galaxy-color opacity-80">{profile.classLabel}</p>
+              </div>
+            </button>
+          )
+        })}
+
+        {SHARED_TILES.map((tile) => {
+          const isHovered = hoveredId === tile.id
+          return (
+            <button
+              key={tile.id}
+              type="button"
+              onClick={() => onSelectShared(tile.id)}
+              onMouseEnter={() => setHoveredId(tile.id)}
+              onMouseLeave={() => setHoveredId(null)}
+              className={`profile-card profile-card-shared ${isHovered ? 'scale-105' : ''} transition-transform`}
+            >
+              <AvatarFrame src={tile.image} alt={tile.title} size="profile" />
+              <div className="profile-card-text">
+                <p className={isHovered ? 'text-white' : 'text-galaxy-color'}>{tile.brand}</p>
+                <p className={snesTextClass('galaxy')}>{tile.title}</p>
               </div>
             </button>
           )

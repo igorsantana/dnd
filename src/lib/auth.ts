@@ -44,6 +44,10 @@ export function setSessionProfile(profileId: string): void {
   sessionStorage.setItem(PROFILE_KEY, profileId)
 }
 
+export function clearSessionProfile(): void {
+  sessionStorage.removeItem(PROFILE_KEY)
+}
+
 export function clearSession(): void {
   sessionStorage.removeItem(SESSION_KEY)
   sessionStorage.removeItem(PROFILE_KEY)

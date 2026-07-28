@@ -8,10 +8,12 @@ import {
   pickNewerCharacter,
   pushCharacterToCloud,
 } from '../lib/remote-storage'
-import { getSessionProfile, setSessionProfile } from '../lib/auth'
+import { getSessionProfile, setSessionProfile, clearSessionProfile } from '../lib/auth'
 import { isCasterClass } from '../lib/classes'
 import { pt } from '../i18n/pt'
-import { ProfilePicker } from './ProfilePicker'
+import { ProfilePicker, type SharedPageId } from './ProfilePicker'
+import { NotesPage } from './NotesPage'
+import { BagPage } from './BagPage'
 import { ClassFeatureSection, SpellcastingSections } from './ClassSections'
 import { SaveCelebration } from './SaveCelebration'
 import { LevelUpNoticeModal } from './LevelUpNoticeModal'
@@ -82,6 +84,7 @@ function normalizeForProfile(profile: PlayerProfile, character: Character): Char
 
 export function PlayerSheet() {
   const [profileId, setProfileId] = useState<string | null>(() => getSessionProfile())
+  const [sharedPage, setSharedPage] = useState<SharedPageId | null>(null)
   const [character, setCharacter] = useState<Character>(createEmptyCharacter)
   const [showCelebration, setShowCelebration] = useState(false)
   const [ready, setReady] = useState(false)
@@ -148,7 +151,22 @@ export function PlayerSheet() {
   }, [])
 
   function selectProfile(id: string) {
+    setSharedPage(null)
     void loadProfile(id)
+  }
+
+  function selectShared(page: SharedPageId) {
+    setSharedPage(page)
+  }
+
+  function backToPicker() {
+    loadGeneration.current += 1
+    setSharedPage(null)
+    setProfileId(null)
+    setReady(true)
+    setLoadingProfile(false)
+    setLevelUpNotice(null)
+    clearSessionProfile()
   }
 
   function update<K extends keyof Character>(key: K, value: Character[K]) {
@@ -200,6 +218,7 @@ export function PlayerSheet() {
       name: '',
       description: '',
       attuned: false,
+      equipped: false,
     }
     update('magicItems', [...character.magicItems, item])
     setEditingMagicItemId(item.id)
@@ -260,10 +279,18 @@ export function PlayerSheet() {
     setShowCelebration(true)
   }
 
+  if (sharedPage === 'notes') {
+    return <NotesPage onBack={backToPicker} />
+  }
+
+  if (sharedPage === 'bag') {
+    return <BagPage onBack={backToPicker} />
+  }
+
   if (!ready && !profileId) return null
 
   if (!profileId || !profile) {
-    return <ProfilePicker onSelect={selectProfile} />
+    return <ProfilePicker onSelect={selectProfile} onSelectShared={selectShared} />
   }
 
   if (loadingProfile) {
@@ -312,6 +339,15 @@ export function PlayerSheet() {
           )}
           <div className="sheet-layout">
             <aside className="sheet-sidebar">
+              <div className="sheet-header-actions">
+                <button
+                  type="button"
+                  className="snes-link text-galaxy-color sheet-back-link"
+                  onClick={backToPicker}
+                >
+                  {pt.partyShared.back}
+                </button>
+              </div>
               <div className="sheet-header">
                 <AvatarFrame src={profile.image} alt={profile.characterName} size="lg" />
                 <div className="sheet-header-text">
@@ -428,6 +464,11 @@ export function PlayerSheet() {
                                 checked={item.attuned}
                                 onChange={(v) => updateMagicItem(item.id, { attuned: v })}
                               />
+                              <CheckboxField
+                                label={t.fields.equipped}
+                                checked={item.equipped}
+                                onChange={(v) => updateMagicItem(item.id, { equipped: v })}
+                              />
                               <TextArea
                                 label={t.fields.description}
                                 value={item.description}
@@ -454,7 +495,12 @@ export function PlayerSheet() {
                         <CompactSheetItem
                           key={item.id}
                           title={item.name}
-                          meta={item.attuned ? t.fields.attuned : undefined}
+                          meta={[
+                            item.attuned ? t.fields.attuned : null,
+                            item.equipped ? t.fields.equipped : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' · ') || undefined}
                           detail={item.description}
                           onEdit={() => setEditingMagicItemId(item.id)}
                           onRemove={() => removeMagicItem(item.id)}

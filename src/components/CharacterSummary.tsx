@@ -404,7 +404,13 @@ export function CharacterSummary({ character }: { character: Character }) {
               <li key={i.id} className="admin-summary-list-item">
                 <span className="text-white">
                   {i.name}
-                  {i.attuned ? ` (${t.fields.attuned})` : ''}
+                  {[
+                    i.attuned ? t.fields.attuned : null,
+                    i.equipped ? t.fields.equipped : null,
+                  ]
+                    .filter(Boolean)
+                    .map((label) => ` (${label})`)
+                    .join('')}
                 </span>
                 {hasText(i.description) && (
                   <span className="text-galaxy-color opacity-80">{i.description}</span>
