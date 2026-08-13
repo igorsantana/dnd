@@ -673,6 +673,28 @@
   opacity: 0.75;
 }
 
+.choice-custom-option {
+  width: 100%;
+}
+
+.choice-custom-option > .snes-pill {
+  width: 100%;
+  text-align: left;
+}
+
+.choice-custom-input {
+  margin-top: 0.5rem;
+}
+
+.choice-custom-input input {
+  width: 100%;
+}
+
+.presence-options-list .spell-picker-options {
+  max-height: none;
+  overflow-y: visible;
+}
+
 .feature-block {
   margin-top: 1rem;
 }

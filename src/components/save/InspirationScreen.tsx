@@ -12,7 +12,7 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
         <blockquote className="snes-blockquote has-galaxy-bg inspiration-main-quote">
           <div className="inspiration-session text-sunshine-color">
             <p>próxima sessão:</p>
-            <p>data: a decidir (16/08?)</p>
+            <p>data: 16/08</p>
             <p>numero: 23</p>
             <p>onde terminaram: casa de shaundakul</p>
           </div>

@@ -186,11 +186,26 @@ export function ClassFeatureSection({
       patch.fightingStyle = next[0] ?? ''
     }
     if (choiceKey === 'favoredEnemy') {
-      patch.favoredEnemy = next.join(', ')
+      const races = character.classFeatures.favoredEnemyRaces ?? ''
+      patch.favoredEnemy = [...next, races ? `Humanoides (${races})` : '']
+        .filter(Boolean)
+        .join(', ')
     }
     if (choiceKey === 'favoredTerrain') {
       patch.favoredTerrain = next.join(', ')
     }
+    onUpdateClassFeatures(patch)
+  }
+
+  function updateFavoredEnemyRaces(text: string) {
+    const next = choices.favoredEnemy ?? []
+    const patch: ClassFeatures = {
+      ...character.classFeatures,
+      favoredEnemyRaces: text,
+    }
+    patch.favoredEnemy = [...next, text ? `Humanoides (${text})` : '']
+      .filter(Boolean)
+      .join(', ')
     onUpdateClassFeatures(patch)
   }
 
@@ -268,6 +283,7 @@ export function ClassFeatureSection({
 
     if (feature.kind === 'choice') {
       if (!feature.choiceKey || !feature.options || !feature.maxChoices) return null
+      const isFavoredEnemy = feature.choiceKey === 'favoredEnemy'
       return (
         <div key={feature.id} className="feature-block">
           <ChoicePicker
@@ -276,6 +292,12 @@ export function ClassFeatureSection({
             selected={choices[feature.choiceKey] ?? []}
             maxChoices={effectiveMaxChoices(feature, classLevel)}
             onChange={(next) => updateChoices(feature.choiceKey!, next)}
+            inline={isFavoredEnemy}
+            customTextOptionId={isFavoredEnemy ? 'humanoids' : undefined}
+            customText={
+              isFavoredEnemy ? (character.classFeatures.favoredEnemyRaces ?? '') : ''
+            }
+            onCustomText={isFavoredEnemy ? updateFavoredEnemyRaces : undefined}
           />
           {featureDetail(feature) && (
             <p className="text-galaxy-color feature-detail">{featureDetail(feature)}</p>

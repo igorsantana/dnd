@@ -2,7 +2,7 @@ export const pt = {
   appTitle: 'Passageiros do Boi Feroz',
   login: {
     subtitle: 'A senha é o nome do grupo do zap.',
-    nextSession: 'não sei quando é a próxima sessão',
+    nextSession: 'sessão dia 16/08',
     rumor: 'Onde o chão branco toca o cinza do céu, os olhos se perdem na linha distante do horizonte.',
     password: 'Senha',
     passwordPlaceholder: 'Digite a senha...',
@@ -180,6 +180,7 @@ export const pt = {
   features: {
     searchChoices: 'Buscar opções...',
     noChoicesFound: 'Nenhuma opção encontrada.',
+    customChoice: 'Digite as duas raças (ex.: gnolls e orcos)',
     bardicInspiration: 'Inspiração Bárdica',
     bardicInspirationDetail: 'Usos = modificador de Carisma (mín. 1) · recupera no descanso curto (Fonte de Inspiração)',
     jackOfAllTrades: 'Versatilidade',

@@ -76,6 +76,8 @@ export interface ClassFeatures {
   bardicInspirationUses?: string
   jackOfAllTrades?: string
   favoredEnemy?: string
+  /** Typed races when "Humanoides (duas raças)" is chosen (kept out of choices.favoredEnemy). */
+  favoredEnemyRaces?: string
   favoredTerrain?: string
   arcaneRecovery?: string
   spellbookNotes?: string

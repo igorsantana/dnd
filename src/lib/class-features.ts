@@ -102,7 +102,6 @@ export function effectiveMaxChoices(feature: ClassFeatureDef, level: string | nu
   const base = feature.maxChoices ?? 1
 
   if (feature.choiceKey === 'favoredEnemy') {
-    if (lvl >= 14) return 3
     if (lvl >= 6) return 2
     return 1
   }
