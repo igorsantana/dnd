@@ -13,8 +13,10 @@ import {
 } from '../lib/class-features'
 import type { ClassFeatureDef } from '../data/class-features'
 import { proficiencyBonusForLevel } from '../data/spell-slots'
+import { isWarlockSpell } from '../lib/spells'
 import { pt } from '../i18n/pt'
 import { PixelScrollList, SectionTitle } from './ui'
+import type { SnesColor } from '../lib/snes'
 
 function hasText(value: string | undefined): boolean {
   return Boolean(value?.trim())
@@ -24,15 +26,17 @@ function SummarySection({
   title,
   children,
   empty,
+  color = 'galaxy',
 }: {
   title: string
   children: ReactNode
   empty?: boolean
+  color?: SnesColor
 }) {
   if (empty) return null
   return (
     <section className="admin-summary-section">
-      <SectionTitle color="galaxy">{title}</SectionTitle>
+      <SectionTitle color={color}>{title}</SectionTitle>
       <div className="admin-summary-section-body">{children}</div>
     </section>
   )
@@ -188,6 +192,16 @@ function classFeatureRows(
     rows.push({ label: t.spellbookNotes, value: features.spellbookNotes! })
   }
 
+  if (hasText(features.warlockPatron)) {
+    rows.push({ label: t.warlockPatron, value: features.warlockPatron! })
+  }
+  if (hasText(features.pactMagicSlots)) {
+    rows.push({ label: t.pactMagicSlots, value: features.pactMagicSlots! })
+  }
+  if (hasText(features.warlockNotes)) {
+    rows.push({ label: t.warlockNotes, value: features.warlockNotes! })
+  }
+
   return rows
 }
 
@@ -208,8 +222,18 @@ export function CharacterSummary({ character }: { character: Character }) {
   const { abilities } = character
   const { characterClass, subclassId } = resolveProfileClass(character)
 
-  const cantrips = character.spells.filter((s) => s.isCantrip)
-  const spells = character.spells.filter((s) => !s.isCantrip)
+  const warlockLevel = character.classLevels?.warlock ?? (character.profileId === 'antunes' ? 1 : 0)
+  const hasWarlock = warlockLevel > 0
+  const classSpells = hasWarlock
+    ? character.spells.filter((s) => !isWarlockSpell(s))
+    : character.spells
+  const warlockSpells = hasWarlock
+    ? character.spells.filter((s) => isWarlockSpell(s))
+    : []
+  const cantrips = classSpells.filter((s) => s.isCantrip)
+  const spells = classSpells.filter((s) => !s.isCantrip)
+  const warlockCantrips = warlockSpells.filter((s) => s.isCantrip)
+  const warlockLeveled = warlockSpells.filter((s) => !s.isCantrip)
   const featureRows = classFeatureRows(
     character.classFeatures,
     characterClass,
@@ -371,6 +395,49 @@ export function CharacterSummary({ character }: { character: Character }) {
           </ul>
         </PixelScrollList>
       </SummarySection>
+
+      {hasWarlock && (
+        <SummarySection
+          title={tc.warlockCantrips}
+          empty={warlockCantrips.length === 0}
+          color="ocean"
+        >
+          <PixelScrollList count={warlockCantrips.length}>
+            <ul className="admin-summary-list">
+              {warlockCantrips.map((s) => (
+                <li key={s.id} className="admin-summary-list-item">
+                  <span className="text-white">{s.name}</span>
+                  <span className="text-galaxy-color">{s.school}</span>
+                  {hasText(s.notes) && <span className="text-galaxy-color opacity-70">{s.notes}</span>}
+                </li>
+              ))}
+            </ul>
+          </PixelScrollList>
+        </SummarySection>
+      )}
+
+      {hasWarlock && (
+        <SummarySection
+          title={tc.warlockSpells}
+          empty={warlockLeveled.length === 0}
+          color="ocean"
+        >
+          <PixelScrollList count={warlockLeveled.length}>
+            <ul className="admin-summary-list">
+              {warlockLeveled.map((s) => (
+                <li key={s.id} className="admin-summary-list-item">
+                  <span className="text-white">
+                    {s.name}
+                    {hasText(s.level) && ` (${s.level})`}
+                  </span>
+                  <span className="text-galaxy-color">{s.school}</span>
+                  {hasText(s.notes) && <span className="text-galaxy-color opacity-70">{s.notes}</span>}
+                </li>
+              ))}
+            </ul>
+          </PixelScrollList>
+        </SummarySection>
+      )}
 
       <SummarySection title={tc.spellSlots} empty={!hasSlots}>
         <div className="admin-summary-slots">

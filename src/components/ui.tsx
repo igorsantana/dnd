@@ -26,9 +26,10 @@ interface FieldProps {
   placeholder?: string
   type?: string
   className?: string
+  readOnly?: boolean
 }
 
-export function Field({ label, value, onChange, placeholder, type = 'text', className }: FieldProps) {
+export function Field({ label, value, onChange, placeholder, type = 'text', className, readOnly }: FieldProps) {
   const id = useId()
 
   return (
@@ -43,6 +44,7 @@ export function Field({ label, value, onChange, placeholder, type = 'text', clas
           value={value}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
+          readOnly={readOnly}
         />
       </div>
     </div>

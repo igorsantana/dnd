@@ -10,6 +10,7 @@ import {
   getAttacksPerTurn,
   parseLevel,
   resolveFeatures,
+  resolveWarlockFeatures,
   songOfRestDie,
 } from '../lib/class-features'
 import { proficiencyBonusForLevel } from '../data/spell-slots'
@@ -22,6 +23,7 @@ interface ClassSectionsSharedProps {
   characterClass: CharacterClass
   subclassId?: SubclassId
   character: Character
+  warlockLevel?: number
   onUpdateSpells: (spells: Character['spells']) => void
   onUpdateSpellSlots: (slots: Character['spellSlots']) => void
   onUpdateClassFeatures: (features: ClassFeatures) => void
@@ -45,6 +47,7 @@ function featureDetail(feature: ClassFeatureDef): string | undefined {
 export function SpellcastingSections({
   characterClass,
   character,
+  warlockLevel = 0,
   onUpdateSpells,
   onUpdateSpellSlots,
   onUpdateSpellcasting,
@@ -52,6 +55,7 @@ export function SpellcastingSections({
   ClassSectionsSharedProps,
   | 'characterClass'
   | 'character'
+  | 'warlockLevel'
   | 'onUpdateSpells'
   | 'onUpdateSpellSlots'
   | 'onUpdateSpellcasting'
@@ -59,6 +63,7 @@ export function SpellcastingSections({
   const t = pt.classes
   if (!isCasterClass(characterClass)) return null
 
+  const includeWarlock = warlockLevel > 0
   const cantrips = character.spells.filter((s) => s.isCantrip)
   const leveledSpells = character.spells.filter((s) => !s.isCantrip)
 
@@ -119,6 +124,7 @@ export function SpellcastingSections({
           <SectionTitle>{t.cantrips}</SectionTitle>
           <SpellPicker
             characterClass={characterClass}
+            includeWarlock={includeWarlock}
             selected={cantrips}
             cantripsOnly
             showPrepared={false}
@@ -132,6 +138,7 @@ export function SpellcastingSections({
           </SectionTitle>
           <SpellPicker
             characterClass={characterClass}
+            includeWarlock={includeWarlock}
             selected={leveledSpells}
             cantripsOnly={false}
             showPrepared={characterClass === 'wizard'}
@@ -147,14 +154,20 @@ export function ClassFeatureSection({
   characterClass,
   subclassId,
   character,
+  warlockLevel = 0,
   onUpdateClassFeatures,
 }: Pick<
   ClassSectionsSharedProps,
-  'characterClass' | 'subclassId' | 'character' | 'onUpdateClassFeatures'
+  | 'characterClass'
+  | 'subclassId'
+  | 'character'
+  | 'warlockLevel'
+  | 'onUpdateClassFeatures'
 >) {
   const t = pt.classes
   const classLevel = classLevelForFeatures(character, characterClass)
   const features = resolveFeatures(characterClass, subclassId, classLevel)
+  const warlockFeatures = warlockLevel > 0 ? resolveWarlockFeatures(warlockLevel) : []
   const attacksPerTurn = getAttacksPerTurn(characterClass, classLevel)
   const showAttacksPerTurn = characterClass === 'fighter' || characterClass === 'ranger'
   const choices = character.classFeatures.choices ?? {}
@@ -277,6 +290,7 @@ export function ClassFeatureSection({
   if (
     !showAttacksPerTurn &&
     features.length === 0 &&
+    warlockFeatures.length === 0 &&
     characterClass !== 'wizard'
   ) {
     return null
@@ -309,6 +323,44 @@ export function ClassFeatureSection({
           />
         </div>
       )}
+
+      {warlockFeatures.length > 0 && (
+        <div className="feature-block warlock-feature">
+          <p className="sheet-label warlock-feature-title">{t.warlockFeatures}</p>
+          <div className="field-grid field-grid-2">
+            <Field
+              label={t.warlockPatron}
+              value={character.classFeatures.warlockPatron ?? ''}
+              onChange={(v) => updateFeature('warlockPatron', v)}
+              placeholder={t.warlockPatronPlaceholder}
+            />
+            <Field
+              label={t.pactMagicSlots}
+              value={character.classFeatures.pactMagicSlots ?? ''}
+              onChange={(v) => updateFeature('pactMagicSlots', v)}
+              placeholder={t.pactMagicSlotsPlaceholder}
+            />
+          </div>
+          <TextArea
+            label={t.warlockNotes}
+            value={character.classFeatures.warlockNotes ?? ''}
+            onChange={(v) => updateFeature('warlockNotes', v)}
+            rows={2}
+            placeholder={t.warlockNotesPlaceholder}
+          />
+        </div>
+      )}
+
+      {warlockFeatures.map((feature) => (
+        <div key={feature.id} className="feature-block warlock-feature">
+          <p className="sheet-label warlock-feature-label">{featureLabel(feature)}</p>
+          {featureDetail(feature) && (
+            <p className="feature-detail feature-detail-flush warlock-feature-detail">
+              {featureDetail(feature)}
+            </p>
+          )}
+        </div>
+      ))}
     </div>
   )
 }

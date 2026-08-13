@@ -77,6 +77,17 @@ export function resolveFeatures(
   })
 }
 
+/** Warlock class features (Genie patron) by warlock level. */
+export function resolveWarlockFeatures(level: string | number): ClassFeatureDef[] {
+  const lvl = parseLevel(level)
+  return CLASS_FEATURE_CATALOG.filter((feature) => {
+    if (feature.hide) return false
+    if (feature.characterClass !== 'warlock') return false
+    if (feature.minLevel > lvl) return false
+    return true
+  })
+}
+
 export function optionLabel(options: FeatureOption[] | undefined, id: string): string {
   return options?.find((o) => o.id === id)?.label ?? id
 }

@@ -107,6 +107,7 @@ export function PlayerSheet() {
     ? pt.admin.cloudLocal
     : pt.admin.cloudOffline
   const snesColor = profile ? profileToSnesColor(profile.id) : 'galaxy'
+  const warlockLevel = character.classLevels?.warlock ?? (profile?.id === 'antunes' ? 1 : 0)
 
   async function loadProfile(id: string) {
     const dataProfile = getProfileById(id)
@@ -396,6 +397,7 @@ export function PlayerSheet() {
     characterClass: profile.characterClass,
     subclassId: profile.subclassId,
     character,
+    warlockLevel,
     onUpdateSpells: (spells: Character['spells']) => update('spells', spells),
     onUpdateSpellSlots: (spellSlots: Character['spellSlots']) => update('spellSlots', spellSlots),
     onUpdateClassFeatures: (classFeatures: Character['classFeatures']) =>
@@ -472,7 +474,7 @@ export function PlayerSheet() {
                   <Field label={t.fields.subclass} value={character.subclass} onChange={(v) => update('subclass', v)} />
                   <Field label={t.fields.race} value={character.race} onChange={(v) => update('race', v)} />
                   <Field label={t.fields.background} value={character.background} onChange={(v) => update('background', v)} />
-                  <Field label={t.fields.level} value={character.level} onChange={(v) => update('level', v)} type="number" />
+                  <Field label={t.fields.level} value={character.level} onChange={() => {}} type="number" readOnly />
                   <Field label={t.fields.alignment} value={character.alignment} onChange={(v) => update('alignment', v)} />
                 </div>
               </div>
@@ -519,7 +521,6 @@ export function PlayerSheet() {
             <div className="sheet-main">
               <div className="sheet-main-col">
                 {isCaster && <SpellcastingSections {...classSectionProps} />}
-
                 <div className="sheet-section">
                   <SectionTitle>{t.attacks}</SectionTitle>
                   <PixelScrollList count={character.attacks.length}>

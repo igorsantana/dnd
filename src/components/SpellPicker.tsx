@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import type { CharacterClass } from '../data/profiles'
 import type { Spell } from '../types/character'
 import type { SpellCatalogEntry } from '../types/spells'
-import { searchSpells } from '../lib/spells'
+import { isWarlockCatalogEntry, isWarlockSpell, searchSpells } from '../lib/spells'
 import { pt } from '../i18n/pt'
 import { useSnesAccent } from '../contexts/SnesAccentContext'
 import { snesButtonClass } from '../lib/snes'
@@ -10,6 +10,8 @@ import { AddButton, PixelScrollList } from './ui'
 
 interface SpellPickerProps {
   characterClass: CharacterClass
+  /** Include the warlock spell list (and Genie expanded spells) in the search. */
+  includeWarlock?: boolean
   selected: Spell[]
   cantripsOnly: boolean
   showPrepared: boolean
@@ -31,6 +33,7 @@ function catalogToSpell(entry: SpellCatalogEntry, prepared: boolean): Spell {
 
 export function SpellPicker({
   characterClass,
+  includeWarlock = false,
   selected,
   cantripsOnly,
   showPrepared,
@@ -49,8 +52,8 @@ export function SpellPicker({
 
   const options = useMemo(() => {
     if (!query.trim()) return []
-    return searchSpells(characterClass, query, cantripsOnly)
-  }, [characterClass, query, cantripsOnly])
+    return searchSpells(characterClass, query, cantripsOnly, includeWarlock)
+  }, [characterClass, includeWarlock, query, cantripsOnly])
 
   function toggleSpell(entry: SpellCatalogEntry) {
     const key = entry.id
@@ -97,12 +100,13 @@ export function SpellPicker({
           <div className="spell-picker-options">
             {options.map((entry) => {
               const isSelected = selectedIds.has(entry.id)
+              const isWarlock = isWarlockCatalogEntry(entry)
               return (
                 <button
                   key={entry.id}
                   type="button"
                   onClick={() => toggleSpell(entry)}
-                  className={`snes-pill ${snesButtonClass(accent)} ${isSelected ? '' : 'snes-pill-muted'}`}
+                  className={`snes-pill ${snesButtonClass(isWarlock ? 'ocean' : accent)} ${isSelected ? '' : 'snes-pill-muted'}`}
                 >
                   {entry.name}
                   {!cantripsOnly && entry.level > 0 && (
@@ -123,36 +127,39 @@ export function SpellPicker({
       {selected.length > 0 && (
         <PixelScrollList count={selected.length}>
           <ul className="spell-picker-selected">
-            {selected.map((spell) => (
-              <li key={spell.id} className="spell-picker-chip">
-                <span
-                  className={`snes-pill ${snesButtonClass(accent)} ${
-                    spell.prepared || !showPrepared ? '' : 'snes-pill-muted'
-                  }`}
-                >
-                  {spell.name}
-                </span>
-                <span className="spell-picker-chip-actions">
-                  {showPrepared && (
+            {selected.map((spell) => {
+              const isWarlock = isWarlockSpell(spell)
+              return (
+                <li key={spell.id} className="spell-picker-chip">
+                  <span
+                    className={`snes-pill ${snesButtonClass(isWarlock ? 'ocean' : accent)} ${
+                      spell.prepared || !showPrepared ? '' : 'snes-pill-muted'
+                    }`}
+                  >
+                    {spell.name}
+                  </span>
+                  <span className="spell-picker-chip-actions">
+                    {showPrepared && (
+                      <button
+                        type="button"
+                        onClick={() => togglePrepared(spell)}
+                        className="snes-link text-galaxy-color"
+                        title={t.prepared}
+                      >
+                        P
+                      </button>
+                    )}
                     <button
                       type="button"
-                      onClick={() => togglePrepared(spell)}
-                      className="snes-link text-galaxy-color"
-                      title={t.prepared}
+                      onClick={() => removeSpell(spell)}
+                      className="snes-link text-plumber-color"
                     >
-                      P
+                      x
                     </button>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeSpell(spell)}
-                    className="snes-link text-plumber-color"
-                  >
-                    x
-                  </button>
-                </span>
-              </li>
-            ))}
+                  </span>
+                </li>
+              )
+            })}
           </ul>
         </PixelScrollList>
       )}

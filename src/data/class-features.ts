@@ -10,7 +10,7 @@ export interface FeatureOption {
 
 export interface ClassFeatureDef {
   id: string
-  characterClass: CharacterClass
+  characterClass: CharacterClass | 'warlock'
   subclassId?: SubclassId
   minLevel: number
   kind: FeatureKind
@@ -521,5 +521,55 @@ export const CLASS_FEATURE_CATALOG: ClassFeatureDef[] = [
     kind: 'info',
     labelKey: 'arcaneAbeyance',
     detailKey: 'arcaneAbeyanceDetail',
+  },
+
+  // --- Warlock (Geraldo: Bardo 5 / Bruxo 1, Gênio Ar/Djinni, 2014) ---
+  {
+    id: 'pactMagic',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'pactMagic',
+    detailKey: 'pactMagicDetail',
+  },
+  {
+    id: 'geniePatron',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'geniePatron',
+    detailKey: 'geniePatronDetail',
+  },
+  {
+    id: 'expandedSpellList',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'expandedSpellList',
+    detailKey: 'expandedSpellListDetail',
+  },
+  {
+    id: 'geniesVessel',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'geniesVessel',
+    detailKey: 'geniesVesselDetail',
+  },
+  {
+    id: 'geniesWrath',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'geniesWrath',
+    detailKey: 'geniesWrathDetail',
+  },
+  {
+    id: 'bottledRespite',
+    characterClass: 'warlock',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'bottledRespite',
+    detailKey: 'bottledRespiteDetail',
   },
 ]

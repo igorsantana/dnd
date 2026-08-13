@@ -398,6 +398,12 @@
   box-sizing: border-box;
 }
 
+.app-sheet .snes-input input[readonly] {
+  color: #8a8a8a;
+  caret-color: transparent;
+  cursor: default;
+}
+
 .app-sheet .snes-button,
 .app-sheet .sheet-primary-btn {
   font-size: 11px;
@@ -712,6 +718,16 @@
 
 .feature-detail-flush {
   margin-top: 0.15rem;
+}
+
+/* Warlock (multiclass) features rendered inside the shared class-features section */
+.feature-block.warlock-feature .sheet-label,
+.feature-block.warlock-feature .feature-detail {
+  color: #4eb6d9;
+}
+
+.feature-block.warlock-feature .warlock-feature-title {
+  font-size: 10px;
 }
 
 /* Login screen */
