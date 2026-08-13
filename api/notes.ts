@@ -3,30 +3,76 @@ import { authRole, getRedis, redisConfigured } from './_auth.js'
 
 const NOTES_KEY = 'dnd:party:notes'
 
-export interface PartyNotesDoc {
+export interface DiaryPage {
+  id: string
+  title: string
   html: string
-  /** @deprecated kept for older Redis docs written as markdown */
-  markdown?: string
+  createdAt: string
   updatedAt: string
   updatedBy?: string
 }
 
-function emptyNotes(): PartyNotesDoc {
-  return { html: '', updatedAt: new Date(0).toISOString() }
+export interface PartyNotesDoc {
+  v: 2
+  pages: DiaryPage[]
+  updatedAt: string
 }
 
-function normalizeNotes(doc: PartyNotesDoc | null): PartyNotesDoc {
-  if (!doc) return emptyNotes()
+type LegacyNotes = {
+  html?: string
+  markdown?: string
+  updatedAt?: string
+  updatedBy?: string
+}
+
+function legacyPage(html: string, updatedBy?: string): DiaryPage {
+  const zero = new Date(0).toISOString()
+  return { id: 'pagina-1', title: 'Sessão 23', html, createdAt: zero, updatedAt: zero, updatedBy }
+}
+
+function normalizePage(raw: unknown): DiaryPage | null {
+  const p = (raw ?? {}) as {
+    id?: unknown
+    title?: unknown
+    html?: unknown
+    createdAt?: unknown
+    updatedAt?: unknown
+    updatedBy?: unknown
+  }
+  if (typeof p.id !== 'string' || typeof p.title !== 'string') return null
+  return {
+    id: p.id,
+    title: p.title,
+    html: typeof p.html === 'string' ? p.html : '',
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : new Date().toISOString(),
+    updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : new Date().toISOString(),
+    updatedBy: typeof p.updatedBy === 'string' ? p.updatedBy : undefined,
+  }
+}
+
+function normalizeNotes(raw: unknown): PartyNotesDoc {
+  const doc = (raw ?? {}) as Record<string, unknown>
+  if (Array.isArray(doc.pages)) {
+    const pages = doc.pages
+      .map(normalizePage)
+      .filter((p): p is DiaryPage => Boolean(p))
+    return {
+      v: 2,
+      pages,
+      updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : new Date(0).toISOString(),
+    }
+  }
+  const legacy = doc as LegacyNotes
   const html =
-    typeof doc.html === 'string'
-      ? doc.html
-      : typeof doc.markdown === 'string'
-        ? doc.markdown
+    typeof legacy.html === 'string'
+      ? legacy.html
+      : typeof legacy.markdown === 'string'
+        ? legacy.markdown
         : ''
   return {
-    html,
-    updatedAt: doc.updatedAt || new Date(0).toISOString(),
-    updatedBy: doc.updatedBy,
+    v: 2,
+    pages: html ? [legacyPage(html, legacy.updatedBy)] : [],
+    updatedAt: typeof legacy.updatedAt === 'string' ? legacy.updatedAt : new Date(0).toISOString(),
   }
 }
 
@@ -50,17 +96,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     if (req.method === 'POST') {
-      const body = req.body as Partial<PartyNotesDoc>
-      const html =
-        typeof body.html === 'string'
-          ? body.html
-          : typeof body.markdown === 'string'
-            ? body.markdown
-            : ''
+      const body = (req.body ?? {}) as { pages?: unknown[]; updatedBy?: unknown }
+      const pages = Array.isArray(body.pages)
+        ? body.pages.map(normalizePage).filter((p): p is DiaryPage => Boolean(p))
+        : []
       const saved: PartyNotesDoc = {
-        html,
+        v: 2,
+        pages,
         updatedAt: new Date().toISOString(),
-        updatedBy: typeof body.updatedBy === 'string' ? body.updatedBy : role,
       }
       await redis.set(NOTES_KEY, saved)
       return res.status(200).json(saved)

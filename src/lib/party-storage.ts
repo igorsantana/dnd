@@ -1,10 +1,19 @@
 import type { InventoryItem } from '../types/character'
 import { getPlayerPassword } from './auth'
 
-export interface PartyNotesDoc {
+export interface DiaryPage {
+  id: string
+  title: string
   html: string
+  createdAt: string
   updatedAt: string
   updatedBy?: string
+}
+
+export interface PartyNotesDoc {
+  v: 2
+  pages: DiaryPage[]
+  updatedAt: string
 }
 
 export interface PartyBagDoc {
@@ -24,13 +33,46 @@ function authHeaders(json = true): HeadersInit {
   return headers
 }
 
-function normalizeNotesPayload(raw: unknown): PartyNotesDoc {
-  const doc = (raw ?? {}) as { html?: string; markdown?: string; updatedAt?: string; updatedBy?: string }
-  return {
-    html: typeof doc.html === 'string' ? doc.html : typeof doc.markdown === 'string' ? doc.markdown : '',
-    updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : '',
-    updatedBy: doc.updatedBy,
+function normalizePage(raw: unknown): DiaryPage | null {
+  const p = (raw ?? {}) as {
+    id?: unknown
+    title?: unknown
+    html?: unknown
+    createdAt?: unknown
+    updatedAt?: unknown
+    updatedBy?: unknown
   }
+  if (typeof p.id !== 'string' || typeof p.title !== 'string') return null
+  return {
+    id: p.id,
+    title: p.title,
+    html: typeof p.html === 'string' ? p.html : '',
+    createdAt: typeof p.createdAt === 'string' ? p.createdAt : '',
+    updatedAt: typeof p.updatedAt === 'string' ? p.updatedAt : '',
+    updatedBy: typeof p.updatedBy === 'string' ? p.updatedBy : undefined,
+  }
+}
+
+function normalizeNotesPayload(raw: unknown): PartyNotesDoc {
+  const doc = (raw ?? {}) as {
+    v?: number
+    pages?: unknown[]
+    html?: string
+    markdown?: string
+    updatedAt?: string
+    updatedBy?: string
+  }
+  const pages = Array.isArray(doc.pages)
+    ? doc.pages.map(normalizePage).filter((p): p is DiaryPage => Boolean(p))
+    : []
+  if (pages.length > 0) {
+    return { v: 2, pages, updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : '' }
+  }
+  const html = typeof doc.html === 'string' ? doc.html : typeof doc.markdown === 'string' ? doc.markdown : ''
+  const migrated = html
+    ? [{ id: 'pagina-1', title: 'Sessão 23', html, createdAt: '', updatedAt: '', updatedBy: doc.updatedBy }]
+    : []
+  return { v: 2, pages: migrated, updatedAt: typeof doc.updatedAt === 'string' ? doc.updatedAt : '' }
 }
 
 export async function fetchPartyNotes(): Promise<{
@@ -48,14 +90,14 @@ export async function fetchPartyNotes(): Promise<{
 }
 
 export async function pushPartyNotes(
-  html: string,
+  pages: DiaryPage[],
   updatedBy?: string,
 ): Promise<PartyNotesDoc | null> {
   try {
     const response = await fetch(NOTES_URL, {
       method: 'POST',
       headers: authHeaders(),
-      body: JSON.stringify({ html, updatedBy }),
+      body: JSON.stringify({ pages, updatedBy }),
     })
     if (!response.ok) return null
     return normalizeNotesPayload(await response.json())

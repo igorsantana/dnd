@@ -11,8 +11,6 @@ interface ChoicePickerProps {
   maxChoices: number
   onChange: (next: string[]) => void
   searchPlaceholder?: string
-  /** Render all options as a direct list instead of a search box. */
-  inline?: boolean
   /** Option confirmed by typing free text instead of being pushed into the chosen list. */
   customTextOptionId?: string
   /** Persisted free text for the option above. Non-empty means the option is selected (counts as 1 slot). */
@@ -28,7 +26,6 @@ export function ChoicePicker({
   maxChoices,
   onChange,
   searchPlaceholder,
-  inline = false,
   customTextOptionId,
   customText = '',
   onCustomText,
@@ -57,14 +54,14 @@ export function ChoicePicker({
   const filtered = useMemo(() => {
     if (!trimmedQuery) return []
     return options.filter((o) => {
-      if (o.id === customTextOptionId) return false
       if (selectedSet.has(o.id)) return false
+      if (o.id === customTextOptionId && customSelected) return false
       return (
         o.label.toLowerCase().includes(trimmedQuery) ||
         o.id.toLowerCase().includes(trimmedQuery)
       )
     })
-  }, [options, selectedSet, trimmedQuery, customTextOptionId])
+  }, [options, selectedSet, trimmedQuery, customTextOptionId, customSelected])
 
   function add(id: string) {
     if (selectedSet.has(id) || atCap) return
@@ -80,10 +77,18 @@ export function ChoicePicker({
     onCustomText?.(draft.trim())
   }
 
+  function handleCustomBlur() {
+    onCustomText?.(draft.trim())
+    if (!draft.trim()) {
+      setEditing(false)
+    }
+  }
+
   function clearCustomText() {
     onCustomText?.('')
     setDraft('')
     setEditing(false)
+    setQuery('')
   }
 
   const selectedOptions = selected
@@ -107,93 +112,7 @@ export function ChoicePicker({
       : []),
   ]
 
-  if (inline) {
-    return (
-      <div className="spell-picker choice-picker presence-options-list">
-        <p className="sheet-label">
-          {label}
-          <span className="choice-picker-count"> ({usedSlots}/{maxChoices})</span>
-        </p>
-        <div className="spell-picker-options">
-          {options.map((option) => {
-            if (option.id === customTextOptionId) {
-              const showInput = customSelected || editing
-              return (
-                <div key={option.id} className="choice-custom-option">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (customSelected) {
-                        clearCustomText()
-                      } else {
-                        setEditing(true)
-                      }
-                    }}
-                    disabled={!customSelected && atCap}
-                    className={`snes-pill ${snesButtonClass(accent)} ${
-                      customSelected ? '' : 'snes-pill-muted'
-                    }`}
-                  >
-                    {option.label}
-                  </button>
-                  {showInput && (
-                    <div className="snes-input choice-custom-input">
-                      <input
-                        type="text"
-                        value={draft}
-                        onChange={(e) => setDraft(e.target.value)}
-                        onBlur={commitCustomText}
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter') {
-                            commitCustomText()
-                            ;(e.target as HTMLInputElement).blur()
-                          }
-                        }}
-                        placeholder={customTextPlaceholder ?? t.customChoice}
-                      />
-                    </div>
-                  )}
-                </div>
-              )
-            }
-            const isSelected = selectedSet.has(option.id)
-            const disabled = !isSelected && atCap
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => (isSelected ? remove(option.id) : add(option.id))}
-                disabled={disabled}
-                className={`snes-pill ${snesButtonClass(accent)} ${
-                  isSelected ? '' : 'snes-pill-muted'
-                }`}
-              >
-                {option.label}
-              </button>
-            )
-          })}
-        </div>
-        {chips.length > 0 && (
-          <ul className="spell-picker-selected">
-            {chips.map((chip) => (
-              <li key={chip.key} className="spell-picker-chip">
-                <span className={`snes-pill ${snesButtonClass(accent)}`}>{chip.label}</span>
-                <span className="spell-picker-chip-actions">
-                  <button
-                    type="button"
-                    onClick={chip.onRemove}
-                    className="snes-link text-plumber-color"
-                  >
-                    x
-                  </button>
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    )
-  }
+  const showCustomInput = customSelected || editing
 
   return (
     <div className="spell-picker choice-picker">
@@ -202,7 +121,7 @@ export function ChoicePicker({
           {label}
           <span className="choice-picker-count">
             {' '}
-            ({selected.length}/{maxChoices})
+            ({usedSlots}/{maxChoices})
           </span>
         </label>
         {!atCap && (
@@ -216,20 +135,52 @@ export function ChoicePicker({
             />
           </div>
         )}
+        {showCustomInput && (
+          <div className="snes-input choice-custom-input">
+            <input
+              type="text"
+              value={draft}
+              onChange={(e) => setDraft(e.target.value)}
+              onBlur={handleCustomBlur}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  commitCustomText()
+                  ;(e.target as HTMLInputElement).blur()
+                }
+              }}
+              placeholder={customTextPlaceholder ?? t.customChoice}
+            />
+          </div>
+        )}
       </div>
 
       {!atCap && (
         <div className="spell-picker-options">
-          {filtered.map((entry) => (
-            <button
-              key={entry.id}
-              type="button"
-              onClick={() => add(entry.id)}
-              className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
-            >
-              {entry.label}
-            </button>
-          ))}
+          {filtered.map((entry) => {
+            if (entry.id === customTextOptionId) {
+              return (
+                <button
+                  key={entry.id}
+                  type="button"
+                  onClick={() => setEditing(true)}
+                  disabled={atCap}
+                  className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
+                >
+                  {entry.label}
+                </button>
+              )
+            }
+            return (
+              <button
+                key={entry.id}
+                type="button"
+                onClick={() => add(entry.id)}
+                className={`snes-pill ${snesButtonClass(accent)} snes-pill-muted`}
+              >
+                {entry.label}
+              </button>
+            )
+          })}
           {trimmedQuery && filtered.length === 0 && (
             <p className="text-galaxy-color spell-picker-hint">
               {t.noChoicesFound}
@@ -238,15 +189,15 @@ export function ChoicePicker({
         </div>
       )}
 
-      {selectedOptions.length > 0 && (
+      {chips.length > 0 && (
         <ul className="spell-picker-selected">
-          {selectedOptions.map((entry) => (
-            <li key={entry.id} className="spell-picker-chip">
-              <span className={`snes-pill ${snesButtonClass(accent)}`}>{entry.label}</span>
+          {chips.map((chip) => (
+            <li key={chip.key} className="spell-picker-chip">
+              <span className={`snes-pill ${snesButtonClass(accent)}`}>{chip.label}</span>
               <span className="spell-picker-chip-actions">
                 <button
                   type="button"
-                  onClick={() => remove(entry.id)}
+                  onClick={chip.onRemove}
                   className="snes-link text-plumber-color"
                 >
                   x

@@ -234,6 +234,15 @@ export const CLASS_FEATURE_CATALOG: ClassFeatureDef[] = [
     labelKey: 'studentOfWar',
     detailKey: 'studentOfWarDetail',
   },
+  {
+    id: 'tough',
+    characterClass: 'fighter',
+    subclassId: 'battleMaster',
+    minLevel: 1,
+    kind: 'info',
+    labelKey: 'tough',
+    detailKey: 'toughDetail',
+  },
 
   // Samurai
   {

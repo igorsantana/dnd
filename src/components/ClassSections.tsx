@@ -250,6 +250,19 @@ export function ClassFeatureSection({
       )
     }
 
+    if (feature.id === 'tough') {
+      const hpBonus = classLevel * 2
+      return (
+        <div key={feature.id} className="feature-block">
+          <StatDisplay
+            label={featureLabel(feature)}
+            value={`+${hpBonus} PV`}
+            detail={featureDetail(feature)}
+          />
+        </div>
+      )
+    }
+
     if (feature.kind === 'value') {
       const key = feature.valueKey
       if (!key || key === 'choices' || key === 'ritualCasting') return null
@@ -292,7 +305,6 @@ export function ClassFeatureSection({
             selected={choices[feature.choiceKey] ?? []}
             maxChoices={effectiveMaxChoices(feature, classLevel)}
             onChange={(next) => updateChoices(feature.choiceKey!, next)}
-            inline={isFavoredEnemy}
             customTextOptionId={isFavoredEnemy ? 'humanoids' : undefined}
             customText={
               isFavoredEnemy ? (character.classFeatures.favoredEnemyRaces ?? '') : ''

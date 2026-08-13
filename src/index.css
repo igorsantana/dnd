@@ -673,26 +673,16 @@
   opacity: 0.75;
 }
 
-.choice-custom-option {
-  width: 100%;
-}
-
-.choice-custom-option > .snes-pill {
-  width: 100%;
-  text-align: left;
-}
-
 .choice-custom-input {
+  margin-top: 0.5rem;
+}
+
+.app-sheet .sheet-field > .snes-input.choice-custom-input {
   margin-top: 0.5rem;
 }
 
 .choice-custom-input input {
   width: 100%;
-}
-
-.presence-options-list .spell-picker-options {
-  max-height: none;
-  overflow-y: visible;
 }
 
 .feature-block {
@@ -2827,23 +2817,138 @@
   border-style: dashed;
 }
 
-.notes-editor-shell {
-  width: 100%;
-  border: 3px solid #000;
+.notes-page {
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notes-layout {
+  flex: 1 1 auto;
+  display: flex;
+  gap: 1rem;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.notes-sidebar {
+  width: 15rem;
+  min-width: 15rem;
   background: #111;
+  border: 3px solid #000;
+  display: flex;
+  flex-direction: column;
   min-height: 0;
 }
 
-.notes-page {
-  min-height: 100dvh;
+.notes-page-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+}
+
+.note-page-row {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+}
+
+.note-page-open {
+  flex: 1 1 auto;
+  min-width: 0;
+  border: 2px solid #000;
+  background: #222;
+  color: #cfcfcf;
+  text-align: left;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.note-page-open:hover {
+  background: #2d2d2d;
+  color: #fff;
+}
+
+.note-page-row.is-active .note-page-open {
+  background: #3d5a80;
+  color: #fff;
+}
+
+.note-page-delete {
+  flex-shrink: 0;
+  width: 1.9rem;
+  border: 2px solid #000;
+  background: #2a2a2a;
+  color: #cfcfcf;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.note-page-delete:hover {
+  background: #a03040;
+  color: #fff;
+}
+
+.note-page-new {
+  flex-shrink: 0;
+  border: 2px dashed #4a4a4a;
+  background: transparent;
+  color: #9a9a9a;
+  text-align: left;
+  padding: 6px 8px;
+  font-family: inherit;
+  font-size: 11px;
+  line-height: 1.3;
+  cursor: pointer;
+}
+
+.note-page-new:hover {
+  color: #fff;
+  border-color: #7ec8ff;
+}
+
+.notes-editor-shell {
+  flex: 1 1 auto;
+  width: 100%;
+  min-width: 0;
+  border: 3px solid #000;
+  background: #111;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.notes-page .notes-editor-shell {
-  flex: 1 1 auto;
-  display: flex;
-  flex-direction: column;
+.notes-page-titlebar {
+  padding: 6px 8px;
+  background: #151515;
+  border-bottom: 3px solid #000;
+}
+
+.notes-page-title-input {
+  width: 100%;
+  background: #0c0c0c;
+  border: 2px solid #000;
+  color: #fff;
+  padding: 4px 6px;
+  font-family: inherit;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.notes-page-title-input:disabled {
+  opacity: 0.5;
 }
 
 .notes-editor-loading {
@@ -2886,20 +2991,80 @@
 }
 
 .notes-editor-surface {
+  position: relative;
   background: #0c0c0c;
   flex: 1 1 auto;
   display: flex;
   min-height: 0;
 }
 
-.notes-editor-surface .tiptap,
-.notes-prose {
+.notes-editor-surface .notes-editor-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.notes-editor-surface .notes-editor-scroll .tiptap,
+.notes-editor-surface .notes-prose {
   min-height: 100%;
   padding: 1rem 1.1rem;
   outline: none;
   color: #e8e8e8;
   font-size: 14px;
   line-height: 1.65;
+}
+
+.notes-empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  text-align: center;
+  color: #7a7a7a;
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.notes-empty-hint p {
+  margin: 0;
+  max-width: 22rem;
+}
+
+@media (max-width: 768px) {
+  .notes-page {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .notes-layout {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .notes-sidebar {
+    width: 100%;
+    min-width: 0;
+    max-height: 11rem;
+  }
+
+  .notes-page-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .note-page-row,
+  .note-page-new {
+    flex-shrink: 0;
+  }
+
+  .notes-editor-surface {
+    min-height: 60dvh;
+  }
 }
 
 .notes-prose p {
