@@ -14,9 +14,10 @@ const SOURCES = [
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-phb.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-xge.json',
   'https://raw.githubusercontent.com/ariestae/5etools/master/data/spells/spells-scag.json',
-  // SCC / EGW are missing from the ariestae mirror; 5etools-mirror-3 hosts them.
+  // SCC / EGW / TCE are missing from the ariestae mirror; 5etools-mirror-3 hosts them.
   'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-scc.json',
   'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-egw.json',
+  'https://raw.githubusercontent.com/5etools-mirror-3/5etools-src/master/data/spells/spells-tce.json',
 ]
 
 /** Official class lists for sources that omit `classes.fromClassList` in 5etools. */
@@ -42,6 +43,8 @@ const CLASS_OVERRIDES = {
   'Reality Break|EGW': ['Wizard'],
   'Ravenous Void|EGW': ['Wizard'],
   'Time Ravage|EGW': ['Wizard'],
+  // Tasha's Cauldron — 5etools TCE JSON omits class lists for some spells
+  'Mind Sliver|TCE': ['Sorcerer', 'Warlock', 'Wizard'],
 }
 
 const SCHOOL_PT = {
