@@ -2,7 +2,7 @@ export const pt = {
   appTitle: 'Passageiros do Boi Feroz',
   login: {
     subtitle: 'A senha é o nome do grupo do zap.',
-    nextSession: 'sessão dia 16/08',
+    nextSession: 'sessão dia 30/08',
     rumor: 'Onde o chão branco toca o cinza do céu, os olhos se perdem na linha distante do horizonte.',
     password: 'Senha',
     passwordPlaceholder: 'Digite a senha...',

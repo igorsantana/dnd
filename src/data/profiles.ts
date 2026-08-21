@@ -38,7 +38,7 @@ export const PLAYER_PROFILES: PlayerProfile[] = [
     playerName: 'Antunes',
     characterName: 'Geraldo',
     characterClass: 'bard',
-    classLabel: 'Bardo 5 / ? 1',
+    classLabel: 'Bardo 5 / Bruxo 1',
     subclassId: 'eloquence',
     subclassLabel: 'Eloquência · Gênio (Ar)',
     image: '/profiles/antunes.png',

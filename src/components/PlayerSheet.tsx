@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { Attack, Character, InventoryItem, MagicItem } from '../types/character'
 import { createEmptyCharacter, mergeCharacterDefaults } from '../types/character'
 import { getProfileById, type PlayerProfile } from '../data/profiles'
@@ -95,10 +95,6 @@ export function PlayerSheet() {
   const [editingMagicItemId, setEditingMagicItemId] = useState<string | null>(null)
   const [editingInventoryItemId, setEditingInventoryItemId] = useState<string | null>(null)
   const [levelUpNotice, setLevelUpNotice] = useState<ReturnType<typeof getActiveNoticeForProfile>>(null)
-  const [warlockGateOpen, setWarlockGateOpen] = useState(false)
-  const [warlockGatePassword, setWarlockGatePassword] = useState('')
-  const [warlockGateError, setWarlockGateError] = useState('')
-  const [pendingProfileId, setPendingProfileId] = useState<string | null>(null)
   const loadGeneration = useRef(0)
 
   const profile = profileId ? getProfileById(profileId) : undefined
@@ -158,35 +154,7 @@ export function PlayerSheet() {
 
   function selectProfile(id: string) {
     setSharedPage(null)
-    if (id === 'antunes') {
-      setPendingProfileId(id)
-      setWarlockGateOpen(true)
-      setWarlockGatePassword('')
-      setWarlockGateError('')
-      return
-    }
     void loadProfile(id)
-  }
-
-  function submitWarlockGate(event: FormEvent) {
-    event.preventDefault()
-    if (warlockGatePassword.trim().toLowerCase() !== 'warlockdoar') {
-      setWarlockGateError('Senha incorreta.')
-      return
-    }
-    const id = pendingProfileId
-    setWarlockGateOpen(false)
-    setWarlockGatePassword('')
-    setWarlockGateError('')
-    setPendingProfileId(null)
-    if (id) void loadProfile(id)
-  }
-
-  function cancelWarlockGate() {
-    setWarlockGateOpen(false)
-    setWarlockGatePassword('')
-    setWarlockGateError('')
-    setPendingProfileId(null)
   }
 
   function selectShared(page: SharedPageId) {
@@ -332,56 +300,7 @@ export function PlayerSheet() {
   if (!ready && !profileId) return null
 
   if (!profileId || !profile) {
-    return (
-      <>
-        <ProfilePicker onSelect={selectProfile} onSelectShared={selectShared} />
-        {warlockGateOpen && (
-          <div className="snes-modal-overlay" role="presentation" onClick={cancelWarlockGate}>
-            <div
-              className="snes-container snes-panel has-grey-bg snes-modal"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="warlock-gate-title"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <h2 id="warlock-gate-title" className="snes-container-title has-galaxy-underline">
-                Acesso restrito
-              </h2>
-              <p className="text-galaxy-color snes-modal-body">
-                Digite a senha do Geraldo para abrir este perfil.
-              </p>
-              <form onSubmit={submitWarlockGate} className="snes-form-group">
-                <div className={`snes-input ${warlockGateError ? 'is-error' : ''}`}>
-                  <input
-                    type="password"
-                    value={warlockGatePassword}
-                    onChange={(e) => {
-                      setWarlockGatePassword(e.target.value)
-                      setWarlockGateError('')
-                    }}
-                    placeholder="Senha"
-                    autoFocus
-                  />
-                </div>
-                {warlockGateError && (
-                  <p className="text-plumber-color" role="alert">
-                    {warlockGateError}
-                  </p>
-                )}
-                <div className="snes-modal-actions">
-                  <button type="button" className="snes-link text-galaxy-color" onClick={cancelWarlockGate}>
-                    Cancelar
-                  </button>
-                  <PrimaryButton type="submit" color="galaxy">
-                    Entrar
-                  </PrimaryButton>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-      </>
-    )
+    return <ProfilePicker onSelect={selectProfile} onSelectShared={selectShared} />
   }
 
   if (loadingProfile) {

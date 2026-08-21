@@ -12,9 +12,9 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
         <blockquote className="snes-blockquote has-galaxy-bg inspiration-main-quote">
           <div className="inspiration-session text-sunshine-color">
             <p>próxima sessão:</p>
-            <p>data: 16/08</p>
-            <p>numero: 23</p>
-            <p>onde terminaram: casa de shaundakul</p>
+            <p>data: 30/08</p>
+            <p>numero: 24</p>
+            <p>onde terminaram: monolito do deus Stronmaus</p>
           </div>
         </blockquote>
 
@@ -56,6 +56,7 @@ export function InspirationScreen({ onBack }: InspirationScreenProps) {
               <li>encontraram um deus</li>
               <li>pularam num portal místico de druida</li>
               <li>mataram um mago lvl 8</li>
+              <li>mataram o elemental do tempo</li>
             </ul>
           </blockquote>
         </div>
