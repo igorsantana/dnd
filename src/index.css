@@ -2705,6 +2705,51 @@
   min-width: 18rem;
 }
 
+.admin-grant-panel {
+  margin-bottom: 1.25rem;
+  padding: 1rem 1.1rem 1.15rem;
+}
+
+.admin-grant-list {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.admin-grant-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-grant-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.admin-grant-name {
+  font-size: 0.95rem;
+  line-height: 1.25;
+}
+
+.admin-grant-sub {
+  font-size: 0.75rem;
+  opacity: 0.85;
+}
+
+.admin-grant-msg {
+  margin: 0.75rem 0 0;
+  font-size: 0.85rem;
+}
+
 @media (min-width: 1200px) {
   .admin-page {
     grid-template-columns: minmax(330px, 28%) minmax(0, 1fr);

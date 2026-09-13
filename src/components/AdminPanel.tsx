@@ -11,6 +11,12 @@ import { clearSession } from '../lib/auth'
 import { applyLevelUpToCharacter, buildLevelUpPreview } from '../lib/level-up'
 import { saveLevelUpEvent } from '../lib/level-up-store'
 import { parseLevel } from '../lib/class-features'
+import {
+  catalogEntryToMagicItem,
+  characterHasCatalogItem,
+  getMagicItemCatalog,
+} from '../lib/magic-items'
+import type { MagicItemCatalogEntry } from '../data/magic-item-catalog'
 import { pt } from '../i18n/pt'
 import { getProfileById, PLAYER_PROFILES } from '../data/profiles'
 import { PrimaryButton, SectionTitle } from './ui'
@@ -73,9 +79,12 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
   const [confirmLevelUp, setConfirmLevelUp] = useState(false)
   const [levelUpMessage, setLevelUpMessage] = useState<string | null>(null)
   const [sharedPage, setSharedPage] = useState<'notes' | 'bag' | null>(null)
+  const [grantMessage, setGrantMessage] = useState<string | null>(null)
+  const [grantingId, setGrantingId] = useState<string | null>(null)
   const t = pt.admin
   const lt = pt.levelUp
   const cloudUnavailableText = import.meta.env.DEV ? t.cloudLocal : t.cloudOffline
+  const grantCatalog = getMagicItemCatalog()
 
   if (sharedPage === 'notes') {
     return <NotesPage onBack={() => setSharedPage(null)} />
@@ -173,6 +182,37 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
     onLogout()
   }
 
+  async function handleGrantItem(entry: MagicItemCatalogEntry) {
+    if (!selected) return
+    setGrantMessage(null)
+    if (characterHasCatalogItem(selected, entry.id)) {
+      setGrantMessage(t.grantItemExists(entry.name))
+      return
+    }
+
+    setGrantingId(entry.id)
+    const next: Character = {
+      ...selected,
+      magicItems: [...(selected.magicItems ?? []), catalogEntryToMagicItem(entry)],
+    }
+    const savedLocal = saveCharacter(next)
+    const savedCloud = await pushCharacterToCloud(savedLocal)
+    const finalCharacter = normalizeCharacter(savedCloud ?? savedLocal)
+
+    setCharacters((prev) =>
+      prev.map((character) =>
+        character.id === finalCharacter.id || character.profileId === finalCharacter.profileId
+          ? finalCharacter
+          : character,
+      ),
+    )
+    setSelected(finalCharacter)
+    setGrantMessage(
+      savedCloud ? t.grantItemDone(entry.name, finalCharacter.name) : t.grantItemError,
+    )
+    setGrantingId(null)
+  }
+
   return (
     <div className="app-shell admin-page">
       <aside className="admin-sidebar">
@@ -235,7 +275,10 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
                 <li key={character.id}>
                   <button
                     type="button"
-                    onClick={() => setSelected(character)}
+                    onClick={() => {
+                      setSelected(character)
+                      setGrantMessage(null)
+                    }}
                     className={`snes-container snes-panel has-grey-bg admin-character-card ${
                       selected?.id === character.id ? 'is-selected' : ''
                     }`}
@@ -270,6 +313,43 @@ export function AdminPanel({ onLogout }: { onLogout: () => void }) {
                 {t.exportCharacter}
               </PrimaryButton>
             </div>
+
+            <section className="admin-grant-panel snes-container snes-panel has-grey-bg">
+              <SectionTitle color="ember">{t.grantItemTitle}</SectionTitle>
+              <ul className="admin-grant-list">
+                {grantCatalog.map((entry) => {
+                  const owned = characterHasCatalogItem(selected, entry.id)
+                  return (
+                    <li key={entry.id} className="admin-grant-row">
+                      <div className="admin-grant-meta">
+                        <span className="text-white admin-grant-name">{entry.name}</span>
+                        <span className="text-galaxy-color admin-grant-sub">
+                          {t.grantItemRarity(entry.rarity, entry.typeLabel)}
+                        </span>
+                      </div>
+                      <PrimaryButton
+                        type="button"
+                        color={owned ? 'phantom' : 'ember'}
+                        disabled={owned || grantingId === entry.id}
+                        onClick={() => void handleGrantItem(entry)}
+                      >
+                        {owned
+                          ? t.grantItemOwned
+                          : grantingId === entry.id
+                            ? '...'
+                            : t.grantItem}
+                      </PrimaryButton>
+                    </li>
+                  )
+                })}
+              </ul>
+              {grantMessage && (
+                <p className="text-nature-color admin-grant-msg" role="status">
+                  {grantMessage}
+                </p>
+              )}
+            </section>
+
             <CharacterSummary character={selected} />
           </>
         ) : (

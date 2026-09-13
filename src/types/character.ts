@@ -14,6 +14,8 @@ export interface Attack {
 
 export interface MagicItem {
   id: string
+  /** Catalog id when granted from the DM item list */
+  catalogId?: string
   name: string
   description: string
   attuned: boolean
